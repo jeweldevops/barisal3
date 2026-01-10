@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   LayoutDashboard, 
   Newspaper, 
@@ -24,7 +24,9 @@ import {
   Image as ImageIcon,
   Wand2,
   Loader2,
-  Sparkles
+  Sparkles,
+  Upload,
+  Eye
 } from 'lucide-react';
 import { getData, saveData, resetData } from '../services/storageService';
 import { generateCampaignImage, suggestImagePrompt } from '../services/geminiService';
@@ -67,13 +69,38 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   }, [saveStatus]);
 
   const handleSave = (key: 'NEWS' | 'MANIFESTO' | 'BIO' | 'PROFILE' | 'ADMINS', data: any) => {
-    saveData(key, data);
-    setSaveStatus('Changes saved successfully!');
-    if (key === 'NEWS') setNews(data);
-    if (key === 'MANIFESTO') setManifesto(data);
-    if (key === 'BIO') setBio(data);
-    if (key === 'PROFILE') setProfile(data);
-    if (key === 'ADMINS') setAdmins(data);
+    try {
+      saveData(key, data);
+      setSaveStatus('Changes saved successfully!');
+      if (key === 'NEWS') setNews(data);
+      if (key === 'MANIFESTO') setManifesto(data);
+      if (key === 'BIO') setBio(data);
+      if (key === 'PROFILE') setProfile(data);
+      if (key === 'ADMINS') setAdmins(data);
+    } catch (e) {
+      alert("Storage limit exceeded. Please use shorter text or compress images.");
+    }
+  };
+
+  const processImageFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit for localStorage safety
+        alert("Image is too large. Please select an image under 1MB.");
+        return;
+      }
+      const base64 = await processImageFile(file);
+      callback(base64);
+    }
   };
 
   const handleAddAdmin = (e: React.FormEvent) => {
@@ -175,7 +202,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       </div>
       
       <div className="bg-slate-900 text-white p-10 rounded-[3rem] shadow-xl">
-        <h3 className="text-2xl font-bold mb-6">Candidate Identity & Roles</h3>
+        <div className="flex justify-between items-start mb-10">
+          <div>
+            <h3 className="text-2xl font-bold mb-2">Candidate Identity & Roles</h3>
+            <p className="text-slate-400">Official profile data used across the hero section and footer.</p>
+          </div>
+          <div className="relative group cursor-pointer">
+            <div className="w-24 h-24 rounded-full border-4 border-green-700 overflow-hidden bg-slate-800">
+               <img src={profile.image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d'} className="w-full h-full object-cover" />
+               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Upload size={20} />
+               </div>
+            </div>
+            <input 
+              type="file" 
+              className="absolute inset-0 opacity-0 cursor-pointer" 
+              onChange={(e) => handleFileUpload(e, (url) => setProfile({...profile, image: url}))}
+            />
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <h4 className="text-green-500 font-bold text-sm uppercase tracking-widest">English Identity</h4>
@@ -230,7 +276,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const renderSettings = () => (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Create User Section */}
         <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm flex flex-col h-full">
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
             <UserPlus className="text-green-700" /> Create New Admin User
@@ -273,7 +318,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           </form>
         </div>
 
-        {/* Change Own Password Section */}
         <div className="bg-slate-900 text-white rounded-[2.5rem] p-10 shadow-xl flex flex-col h-full">
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
             <Fingerprint className="text-green-500" /> Security Settings
@@ -302,41 +346,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           </div>
         </div>
       </div>
-
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-slate-100 bg-slate-50/50">
-          <h3 className="text-xl font-bold">Account Management</h3>
-        </div>
-        <div className="divide-y divide-slate-100">
-          {admins.map((admin, idx) => (
-            <div key={idx} className="p-8 flex items-center justify-between hover:bg-slate-50 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${admin.username === currentAdmin?.username ? 'bg-green-700 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>
-                  <ShieldCheck size={24} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h4 className="font-bold text-slate-900 text-lg">{admin.username}</h4>
-                    {admin.username === currentAdmin?.username && <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-green-100 text-green-700 rounded-md">You</span>}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-bold uppercase">{admin.role}</span>
-                    <span className="text-xs text-slate-400 font-mono">••••••••</span>
-                  </div>
-                </div>
-              </div>
-              <button 
-                onClick={() => removeAdmin(admin.username)}
-                disabled={admin.username === currentAdmin?.username}
-                className={`p-3 rounded-xl transition-all ${admin.username === currentAdmin?.username ? 'opacity-20 cursor-not-allowed' : 'text-red-600 hover:bg-red-50'}`}
-                title="Remove User"
-              >
-                <Trash2 size={20} />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 
@@ -359,8 +368,32 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       <div className="divide-y divide-slate-100">
         {news.en.map((item: any, idx: number) => (
           <div key={item.id} className="p-8 hover:bg-slate-50 transition-colors">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-              <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+              <div className="lg:col-span-2 space-y-4">
+                 <div className="relative group w-full aspect-square bg-slate-100 rounded-3xl overflow-hidden border border-slate-200">
+                    <img src={item.image} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                       <Upload className="text-white" size={24} />
+                       <span className="text-[10px] text-white font-bold uppercase">Upload</span>
+                    </div>
+                    <input 
+                      type="file" 
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={(e) => handleFileUpload(e, (url) => {
+                        const nEn = [...news.en]; const nBn = [...news.bn];
+                        nEn[idx].image = url; nBn[idx].image = url;
+                        setNews({en: nEn, bn: nBn});
+                      })}
+                    />
+                 </div>
+                 <button 
+                  onClick={() => { setImageGenIdx(idx); setShowImageGen(true); }}
+                  className="w-full bg-green-50 text-green-700 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-green-100 hover:bg-green-100 transition-all"
+                 >
+                   <Wand2 className="inline mr-1" size={12} /> AI Tool
+                 </button>
+              </div>
+              <div className="lg:col-span-5 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 bg-slate-100 rounded flex items-center justify-center text-[10px] font-bold">EN</div>
                   <span className="text-xs font-black uppercase tracking-widest text-slate-400">English Content</span>
@@ -386,7 +419,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   }}
                 />
               </div>
-              <div className="space-y-4">
+              <div className="lg:col-span-5 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 bg-red-50 rounded flex items-center justify-center text-[10px] font-bold text-red-600">BN</div>
                   <span className="text-xs font-black uppercase tracking-widest text-slate-400">বাংলা কন্টেন্ট</span>
@@ -425,16 +458,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     setNews({en: nEn, bn: nBn});
                   }} 
                 />
-                <button 
-                  onClick={() => {
-                    setImageGenIdx(idx);
-                    setShowImageGen(true);
-                  }}
-                  className="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-200 transition-all flex items-center gap-2 shadow-sm"
-                  title="Generate AI Image"
-                >
-                  <Wand2 size={14} /> AI Tool
-                </button>
               </div>
               <button 
                 onClick={() => {
@@ -459,12 +482,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         </button>
       </div>
 
-      {/* AI Image Generation Modal */}
       {showImageGen && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[200] flex items-center justify-center p-6">
           <div className="bg-white rounded-[3rem] p-8 md:p-12 max-w-4xl w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
             <button onClick={() => { setShowImageGen(false); setImageGenIdx(null); setGenImageUrl(null); }} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900"><X size={32}/></button>
-            
             <div className="flex items-center gap-4 mb-8">
               <div className="bg-green-700 p-3 rounded-2xl text-white shadow-lg"><Wand2 size={24} /></div>
               <div>
@@ -472,45 +493,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <p className="text-slate-500 font-medium">Create custom visual content for your update.</p>
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 overflow-y-auto pr-2">
               <div className="space-y-6">
                 <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                   <div className="flex justify-between items-center mb-4">
                     <label className="text-sm font-black uppercase text-slate-400 tracking-widest">Image Prompt</label>
-                    <button 
-                      onClick={() => handleSuggestPrompt(imageGenIdx!)}
-                      disabled={isGenPromptLoading}
-                      className="text-xs font-bold text-green-700 hover:text-green-800 flex items-center gap-1.5 bg-green-50 px-3 py-1 rounded-full border border-green-100"
-                    >
+                    <button onClick={() => handleSuggestPrompt(imageGenIdx!)} disabled={isGenPromptLoading} className="text-xs font-bold text-green-700 hover:text-green-800 flex items-center gap-1.5 bg-green-50 px-3 py-1 rounded-full border border-green-100">
                       {isGenPromptLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} 
                       Suggest Prompt
                     </button>
                   </div>
-                  <textarea 
-                    className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm h-32 focus:ring-2 focus:ring-green-700 outline-none resize-none shadow-inner"
-                    value={genPrompt}
-                    onChange={(e) => setGenPrompt(e.target.value)}
-                    placeholder="Describe the image you want to generate..."
-                  />
-                  <button 
-                    onClick={handleGenerateImage}
-                    disabled={!genPrompt || isImageLoading}
-                    className="w-full mt-6 bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  <textarea className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm h-32 focus:ring-2 focus:ring-green-700 outline-none resize-none shadow-inner" value={genPrompt} onChange={(e) => setGenPrompt(e.target.value)} placeholder="Describe the image you want to generate..." />
+                  <button onClick={handleGenerateImage} disabled={!genPrompt || isImageLoading} className="w-full mt-6 bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed">
                     {isImageLoading ? <Loader2 size={20} className="animate-spin" /> : <Wand2 size={20} />} 
                     Generate Campaign Visual
                   </button>
                 </div>
-                
-                <div className="p-6 bg-red-50 rounded-3xl border border-red-100">
-                  <h4 className="text-sm font-bold text-red-800 mb-2">Note for Admins</h4>
-                  <p className="text-xs text-red-700 leading-relaxed">
-                    AI generated images should maintain a professional and respectful tone representing the campaign's values. Ensure the prompt describes appropriate settings.
-                  </p>
-                </div>
               </div>
-
               <div className="flex flex-col">
                 <label className="text-sm font-black uppercase text-slate-400 tracking-widest mb-4">Preview & Application</label>
                 <div className="flex-1 bg-slate-100 rounded-[2rem] border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden min-h-[250px] relative shadow-inner">
@@ -528,12 +527,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </div>
                   )}
                 </div>
-                
-                <button 
-                  onClick={applyGeneratedImage}
-                  disabled={!genImageUrl}
-                  className="w-full mt-6 bg-green-700 hover:bg-green-800 text-white font-bold py-5 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-20 disabled:grayscale"
-                >
+                <button onClick={applyGeneratedImage} disabled={!genImageUrl} className="w-full mt-6 bg-green-700 hover:bg-green-800 text-white font-bold py-5 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-20 disabled:grayscale">
                   <CheckCircle2 size={24} /> Use This Image
                 </button>
               </div>
@@ -550,8 +544,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         <h3 className="text-xl font-bold">Biography Timeline</h3>
         <button 
           onClick={() => {
-            const newItemEn = { year: 'Year', title: 'Milestone Title', description: 'Description...' };
-            const newItemBn = { year: 'বছর', title: 'মাইলফলক শিরোনাম', description: 'বর্ণনা...' };
+            const newItemEn = { year: 'Year', title: 'Milestone Title', description: 'Description...', image: '' };
+            const newItemBn = { year: 'বছর', title: 'মাইলফলক শিরোনাম', description: 'বর্ণনা...', image: '' };
             setBio({ en: [...bio.en, newItemEn], bn: [...bio.bn, newItemBn] });
           }}
           className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
@@ -562,48 +556,44 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       <div className="p-8 space-y-8">
         {bio.en.map((item: any, idx: number) => (
           <div key={idx} className="bg-slate-50 p-6 rounded-3xl border border-slate-100 relative group">
-            <button 
-              onClick={() => {
-                const newEn = bio.en.filter((_: any, i: number) => i !== idx);
-                const newBn = bio.bn.filter((_: any, i: number) => i !== idx);
-                setBio({ en: newEn, bn: newBn });
-              }}
-              className="absolute -top-3 -right-3 w-8 h-8 bg-white text-red-600 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-            >
+            <button onClick={() => { const newEn = bio.en.filter((_: any, i: number) => i !== idx); const newBn = bio.bn.filter((_: any, i: number) => i !== idx); setBio({ en: newEn, bn: newBn }); }} className="absolute -top-3 -right-3 w-8 h-8 bg-white text-red-600 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 hover:text-white transition-all opacity-0 group-hover:opacity-100 z-10">
               <X size={16} />
             </button>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <input className="w-32 bg-white border border-slate-200 rounded-lg px-3 py-1 font-bold text-green-700" value={item.year} onChange={(e) => {
-                  const n = [...bio.en]; n[idx].year = e.target.value; setBio({...bio, en: n});
-                }} />
-                <input className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold" value={item.title} onChange={(e) => {
-                  const n = [...bio.en]; n[idx].title = e.target.value; setBio({...bio, en: n});
-                }} />
-                <textarea className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm h-20" value={item.description} onChange={(e) => {
-                  const n = [...bio.en]; n[idx].description = e.target.value; setBio({...bio, en: n});
-                }} />
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+              <div className="md:col-span-2 space-y-3">
+                 <div className="relative group aspect-square rounded-2xl overflow-hidden bg-white border border-slate-200">
+                    {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-slate-300"><ImageIcon size={32}/></div>}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Upload className="text-white" size={20}/>
+                    </div>
+                    <input 
+                      type="file" 
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={(e) => handleFileUpload(e, (url) => {
+                        const nEn = [...bio.en]; const nBn = [...bio.bn];
+                        nEn[idx].image = url; nBn[idx].image = url;
+                        setBio({en: nEn, bn: nBn});
+                      })}
+                    />
+                 </div>
+                 <div className="text-[9px] text-center font-bold text-slate-400 uppercase">Milestone Image</div>
               </div>
-              <div className="space-y-4">
-                <input className="w-32 bg-white border border-slate-200 rounded-lg px-3 py-1 font-bold text-red-600" value={bio.bn[idx].year} onChange={(e) => {
-                  const n = [...bio.bn]; n[idx].year = e.target.value; setBio({...bio, bn: n});
-                }} />
-                <input className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold" value={bio.bn[idx].title} onChange={(e) => {
-                  const n = [...bio.bn]; n[idx].title = e.target.value; setBio({...bio, bn: n});
-                }} />
-                <textarea className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm h-20" value={bio.bn[idx].description} onChange={(e) => {
-                  const n = [...bio.bn]; n[idx].description = e.target.value; setBio({...bio, bn: n});
-                }} />
+              <div className="md:col-span-5 space-y-4">
+                <input className="w-32 bg-white border border-slate-200 rounded-lg px-3 py-1 font-bold text-green-700" value={item.year} onChange={(e) => { const n = [...bio.en]; n[idx].year = e.target.value; setBio({...bio, en: n}); }} />
+                <input className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold" value={item.title} onChange={(e) => { const n = [...bio.en]; n[idx].title = e.target.value; setBio({...bio, en: n}); }} />
+                <textarea className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm h-20" value={item.description} onChange={(e) => { const n = [...bio.en]; n[idx].description = e.target.value; setBio({...bio, en: n}); }} />
+              </div>
+              <div className="md:col-span-5 space-y-4">
+                <input className="w-32 bg-white border border-slate-200 rounded-lg px-3 py-1 font-bold text-red-600" value={bio.bn[idx].year} onChange={(e) => { const n = [...bio.bn]; n[idx].year = e.target.value; setBio({...bio, bn: n}); }} />
+                <input className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold" value={bio.bn[idx].title} onChange={(e) => { const n = [...bio.bn]; n[idx].title = e.target.value; setBio({...bio, bn: n}); }} />
+                <textarea className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm h-20" value={bio.bn[idx].description} onChange={(e) => { const n = [...bio.bn]; n[idx].description = e.target.value; setBio({...bio, bn: n}); }} />
               </div>
             </div>
           </div>
         ))}
       </div>
       <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
-        <button 
-          onClick={() => handleSave('BIO', bio)}
-          className="bg-green-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2"
-        >
+        <button onClick={() => handleSave('BIO', bio)} className="bg-green-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2">
           <Save size={18} /> Save Biography
         </button>
       </div>
@@ -618,39 +608,47 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       <div className="p-8 space-y-12">
         {manifesto.en.map((sector: any, idx: number) => (
           <div key={idx} className="p-8 border-2 border-slate-100 rounded-[2.5rem] space-y-6">
-            <h4 className="text-lg font-black text-slate-900 border-b-2 border-red-500 w-fit pb-1">Sector {idx + 1}</h4>
+            <div className="flex justify-between items-center">
+              <h4 className="text-lg font-black text-slate-900 border-b-2 border-red-500 w-fit pb-1">Sector {idx + 1}</h4>
+              <div className="flex items-center gap-4">
+                 <div className="relative group w-32 h-20 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                    {sector.image ? <img src={sector.image} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-slate-300"><ImageIcon size={20}/></div>}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Upload className="text-white" size={16}/>
+                    </div>
+                    <input 
+                      type="file" 
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={(e) => handleFileUpload(e, (url) => {
+                        const nEn = [...manifesto.en]; const nBn = [...manifesto.bn];
+                        nEn[idx].image = url; nBn[idx].image = url;
+                        setManifesto({en: nEn, bn: nBn});
+                      })}
+                    />
+                 </div>
+                 <span className="text-[10px] font-black uppercase text-slate-400">Sector Visual</span>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase text-slate-400">English Details</p>
-                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold" value={sector.title} onChange={(e) => {
-                  const n = [...manifesto.en]; n[idx].title = e.target.value; setManifesto({...manifesto, en: n});
-                }} />
-                <textarea className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm h-24" value={sector.description} onChange={(e) => {
-                  const n = [...manifesto.en]; n[idx].description = e.target.value; setManifesto({...manifesto, en: n});
-                }} />
+                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold" value={sector.title} onChange={(e) => { const n = [...manifesto.en]; n[idx].title = e.target.value; setManifesto({...manifesto, en: n}); }} />
+                <textarea className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm h-24" value={sector.description} onChange={(e) => { const n = [...manifesto.en]; n[idx].description = e.target.value; setManifesto({...manifesto, en: n}); }} />
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold text-slate-400">Bullet Points</p>
                   {sector.points.map((p: string, pIdx: number) => (
-                    <input key={pIdx} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs" value={p} onChange={(e) => {
-                      const n = [...manifesto.en]; n[idx].points[pIdx] = e.target.value; setManifesto({...manifesto, en: n});
-                    }} />
+                    <input key={pIdx} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs" value={p} onChange={(e) => { const n = [...manifesto.en]; n[idx].points[pIdx] = e.target.value; setManifesto({...manifesto, en: n}); }} />
                   ))}
                 </div>
               </div>
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase text-slate-400">বাংলা বিবরণ</p>
-                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold" value={manifesto.bn[idx].title} onChange={(e) => {
-                  const n = [...manifesto.bn]; n[idx].title = e.target.value; setManifesto({...manifesto, bn: n});
-                }} />
-                <textarea className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm h-24" value={manifesto.bn[idx].description} onChange={(e) => {
-                  const n = [...manifesto.bn]; n[idx].description = e.target.value; setManifesto({...manifesto, bn: n});
-                }} />
+                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold" value={manifesto.bn[idx].title} onChange={(e) => { const n = [...manifesto.bn]; n[idx].title = e.target.value; setManifesto({...manifesto, bn: n}); }} />
+                <textarea className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm h-24" value={manifesto.bn[idx].description} onChange={(e) => { const n = [...manifesto.bn]; n[idx].description = e.target.value; setManifesto({...manifesto, bn: n}); }} />
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold text-slate-400">পয়েন্ট সমূহ</p>
                   {manifesto.bn[idx].points.map((p: string, pIdx: number) => (
-                    <input key={pIdx} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs" value={p} onChange={(e) => {
-                      const n = [...manifesto.bn]; n[idx].points[pIdx] = e.target.value; setManifesto({...manifesto, bn: n});
-                    }} />
+                    <input key={pIdx} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs" value={p} onChange={(e) => { const n = [...manifesto.bn]; n[idx].points[pIdx] = e.target.value; setManifesto({...manifesto, bn: n}); }} />
                   ))}
                 </div>
               </div>
@@ -659,10 +657,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         ))}
       </div>
       <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
-        <button 
-          onClick={() => handleSave('MANIFESTO', manifesto)}
-          className="bg-green-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2"
-        >
+        <button onClick={() => handleSave('MANIFESTO', manifesto)} className="bg-green-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2">
           <Save size={18} /> Update Manifesto
         </button>
       </div>
@@ -671,7 +666,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
   return (
     <div className="min-h-screen bg-slate-100 flex">
-      {/* Sidebar */}
       <div className="w-72 bg-slate-900 text-white p-8 flex flex-col fixed h-full shadow-2xl z-50">
         <div className="flex items-center gap-3 mb-12">
           <div className="bg-green-700 p-2.5 rounded-2xl shadow-lg ring-4 ring-green-900/30"><Settings size={28} /></div>
@@ -680,40 +674,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
              <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mt-1">Campaign Center</span>
           </div>
         </div>
-        
         <nav className="space-y-3 flex-1">
-          <button 
-            onClick={() => setActiveTab('overview')}
-            className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'overview' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-          >
+          <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'overview' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
             <LayoutDashboard size={20} /> Overview
           </button>
-          <button 
-            onClick={() => setActiveTab('news')}
-            className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'news' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-          >
+          <button onClick={() => setActiveTab('news')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'news' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
             <Newspaper size={20} /> News Feed
           </button>
-          <button 
-            onClick={() => setActiveTab('manifesto')}
-            className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'manifesto' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-          >
+          <button onClick={() => setActiveTab('manifesto')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'manifesto' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
             <Target size={20} /> Manifesto
           </button>
-          <button 
-            onClick={() => setActiveTab('bio')}
-            className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'bio' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-          >
+          <button onClick={() => setActiveTab('bio')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'bio' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
             <UserCircle size={20} /> Biography
           </button>
-          <button 
-            onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'settings' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-          >
+          <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'settings' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
             <Lock size={20} /> Account Access
           </button>
         </nav>
-
         <div className="pt-8 border-t border-white/10 space-y-4">
           <div className="px-5 py-4 bg-white/5 rounded-2xl flex items-center gap-3">
              <div className="w-8 h-8 rounded-full bg-green-700 flex items-center justify-center text-[10px] font-bold">{currentAdmin?.username?.charAt(0).toUpperCase()}</div>
@@ -722,22 +699,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <span className="text-[10px] text-slate-500">{currentAdmin?.role}</span>
              </div>
           </div>
-          <button 
-            onClick={resetData}
-            className="w-full flex items-center gap-3 px-5 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-all text-xs font-black uppercase tracking-widest"
-          >
+          <button onClick={resetData} className="w-full flex items-center gap-3 px-5 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-all text-xs font-black uppercase tracking-widest">
             <RefreshCcw size={16} /> Factory Reset
           </button>
-          <button 
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-white bg-white/5 hover:bg-white/10 transition-all text-sm font-bold shadow-sm"
-          >
+          <button onClick={onLogout} className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-white bg-white/5 hover:bg-white/10 transition-all text-sm font-bold shadow-sm">
             <LogOut size={18} /> Exit Admin
           </button>
         </div>
       </div>
-
-      {/* Content Area */}
       <div className="ml-72 flex-1 p-12 min-h-screen">
         <header className="flex justify-between items-center mb-12">
           <div>
@@ -751,7 +720,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
           )}
         </header>
-
         <main className="pb-24">
           {activeTab === 'overview' && renderOverview()}
           {activeTab === 'news' && renderNewsManager()}

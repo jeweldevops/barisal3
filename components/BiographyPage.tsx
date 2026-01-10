@@ -1,25 +1,51 @@
 
 import React, { useEffect, useState } from 'react';
 import { Language, TRANSLATIONS, CANDIDATE_IMAGE } from '../constants';
-import { getData } from '../services/storageService';
-import { ArrowLeft, Award, BookOpen, Gavel, History, Scale, Users, Heart, Star, Briefcase, Quote, Facebook, Twitter, MessageCircle, Share2, Landmark, Building2 } from 'lucide-react';
+import { getData, saveData } from '../services/storageService';
+import { ArrowLeft, Award, BookOpen, Gavel, History, Scale, Users, Heart, Star, Briefcase, Quote, Facebook, Twitter, MessageCircle, Share2, Landmark, Building2, Upload, Camera } from 'lucide-react';
 
 interface BiographyPageProps {
   onBack: () => void;
   lang: Language;
+  currentAdmin?: any;
 }
 
-const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang }) => {
+const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmin }) => {
   const t = TRANSLATIONS[lang];
   const [milestones, setMilestones] = useState<any[]>([]);
-  const profile = getData('PROFILE');
+  const [profile, setProfile] = useState<any>(getData('PROFILE'));
+  const [portrait, setPortrait] = useState<string>(profile?.image || CANDIDATE_IMAGE);
 
   useEffect(() => {
     const data = getData('BIO');
     if (data) {
       setMilestones(data[lang]);
     }
+    const freshProfile = getData('PROFILE');
+    if (freshProfile) {
+      setProfile(freshProfile);
+      setPortrait(freshProfile.image || CANDIDATE_IMAGE);
+    }
   }, [lang]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) {
+        alert("Image is too large. Please select an image under 1MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setPortrait(base64);
+        const updatedProfile = { ...profile, image: base64 };
+        setProfile(updatedProfile);
+        saveData('PROFILE', updatedProfile);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleShare = (platform: string) => {
     const url = window.location.href;
@@ -66,13 +92,25 @@ const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang }) => {
               <div className="relative w-full max-w-xl mx-auto lg:mx-0">
                 <div className="aspect-[4/5] rounded-[3.5rem] overflow-hidden shadow-[0_40px_80px_-15px_rgba(0,0,0,0.15),0_20px_40px_-20px_rgba(0,0,0,0.2)] border-[18px] border-white bg-white ring-1 ring-slate-100 relative group transition-all duration-500 hover:shadow-[0_60px_100px_-20px_rgba(0,0,0,0.25)]">
                   <img 
-                    src={CANDIDATE_IMAGE} 
+                    src={portrait} 
                     alt={lang === 'en' ? profile.name_en : profile.name_bn}
                     className="w-full h-full object-cover object-center scale-[1.02] transition-transform duration-700 group-hover:scale-105"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://picsum.photos/seed/zainul_bio/800/1000";
-                    }}
                   />
+                  
+                  {currentAdmin && (
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                      <div className="bg-white p-4 rounded-2xl shadow-xl flex items-center gap-3 transform -translate-y-4 group-hover:translate-y-0 transition-transform">
+                        <Camera className="text-green-700" size={24} />
+                        <span className="font-bold text-slate-900">{lang === 'en' ? 'Upload New Portrait' : 'নতুন ছবি আপলোড'}</span>
+                      </div>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                  )}
                   <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.05)] rounded-[2.5rem] pointer-events-none"></div>
                 </div>
                 

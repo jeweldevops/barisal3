@@ -62,6 +62,7 @@ const App: React.FC = () => {
     role1_bn: TRANSLATIONS.bn.hero.role1,
     role2_en: TRANSLATIONS.en.hero.role2,
     role2_bn: TRANSLATIONS.bn.hero.role2,
+    image: CANDIDATE_IMAGE
   };
 
   useEffect(() => {
@@ -200,7 +201,7 @@ const App: React.FC = () => {
       {currentPage === 'vision' ? (
         <VisionPage onBack={() => setCurrentPage('home')} lang={lang} />
       ) : currentPage === 'biography' ? (
-        <BiographyPage onBack={() => setCurrentPage('home')} lang={lang} />
+        <BiographyPage onBack={() => setCurrentPage('home')} lang={lang} currentAdmin={currentAdmin} />
       ) : currentPage === 'updates' ? (
         <UpdatesPage onBack={() => setCurrentPage('home')} lang={lang} />
       ) : currentPage === 'ai-assistant' ? (
@@ -254,7 +255,7 @@ const App: React.FC = () => {
                 </div>
                 <div className="order-1 lg:order-2 relative">
                   <div className="rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 border border-slate-700">
-                    <img src={CANDIDATE_IMAGE} alt={profile.name_en} className="w-full h-auto object-cover grayscale-[30%] hover:grayscale-0 transition-all duration-700" />
+                    <img src={profile.image || CANDIDATE_IMAGE} alt={profile.name_en} className="w-full h-auto object-cover grayscale-[30%] hover:grayscale-0 transition-all duration-700" />
                   </div>
                 </div>
               </div>

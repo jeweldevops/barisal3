@@ -78,7 +78,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate, lang }) => {
           <div className="flex-1 relative group">
             <div className="relative z-10 rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.2)] border-[16px] border-white bg-white ring-1 ring-slate-100 transform transition-transform duration-700 group-hover:scale-[1.02]">
               <img 
-                src={CANDIDATE_IMAGE} 
+                src={profile.image || CANDIDATE_IMAGE} 
                 alt={profile.name_en}
                 className="w-full h-auto object-cover grayscale-[15%] group-hover:grayscale-0 transition-all duration-1000"
               />

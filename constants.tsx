@@ -9,6 +9,9 @@ export const CONSTITUENCY_BN = "বরিশাল-৩ (বাবুগঞ্জ
 export const PARTY = "Bangladesh Nationalist Party-BNP";
 export const PARTY_BN = "বাংলাদেশ জাতীয়তাবাদী দল-বিএনপি";
 
+// Projected Election Date
+export const ELECTION_DATE = "2026-01-05T08:00:00";
+
 // Official contact details
 export const CONTACT_PHONE = "+8801712932567";
 export const CONTACT_EMAIL = "adv.zabedin@gmail.com";

@@ -713,12 +713,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <h1 className="text-4xl font-black text-slate-900 capitalize tracking-tight">{activeTab} Manager</h1>
             <p className="text-slate-500 font-medium mt-1">Official Campaign Management System for Advocate Zainul Abedin.</p>
           </div>
-          {saveStatus && (
-            <div className="bg-green-700 text-white px-8 py-4 rounded-[2rem] flex items-center gap-3 animate-fade-in shadow-2xl border border-green-600 ring-4 ring-green-100">
-              <CheckCircle2 size={24} /> 
-              <span className="font-bold">{saveStatus}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {saveStatus && (
+              <div className="bg-green-700 text-white px-8 py-4 rounded-[2rem] flex items-center gap-3 animate-fade-in shadow-2xl border border-green-600 ring-4 ring-green-100">
+                <CheckCircle2 size={24} /> 
+                <span className="font-bold">{saveStatus}</span>
+              </div>
+            )}
+            <button 
+              onClick={onLogout}
+              className="bg-white border border-slate-200 text-red-600 p-4 rounded-2xl hover:bg-red-50 hover:border-red-200 transition-all shadow-sm flex items-center gap-2 font-bold"
+              title="Logout"
+            >
+              <LogOut size={20} />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
         </header>
         <main className="pb-24">
           {activeTab === 'overview' && renderOverview()}

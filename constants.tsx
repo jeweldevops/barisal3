@@ -9,8 +9,8 @@ export const CONSTITUENCY_BN = "বরিশাল-৩ (বাবুগঞ্জ
 export const PARTY = "Bangladesh Nationalist Party-BNP";
 export const PARTY_BN = "বাংলাদেশ জাতীয়তাবাদী দল-বিএনপি";
 
-// Projected Election Date
-export const ELECTION_DATE = "2026-01-05T08:00:00";
+// Projected Election Date: 12 February 2026
+export const ELECTION_DATE = "2026-02-12T08:00:00";
 
 // Official contact details
 export const CONTACT_PHONE = "+8801712932567";
@@ -179,7 +179,7 @@ export const TRANSLATIONS = {
         "ভবিষ্যৎ প্রজন্মের জন্য তৃণমূল নেতৃত্ব গড়ে তোলা"
       ],
       legal_leadership: "সভাপতি — জাতীয়তাবাদী আইনজীবী ফোরাম",
-      political_leadership: "ভাইস চেয়ারম্যান — বাংলাদেশ জাতীয়তাবাদী দল (বিএনপি)"
+      political_leadership: "ভাইস চেয়ারম্যান — বাংলাদেশ জাতীয়তাবাদী দল (বিএনপি)"
     },
     updates: {
       badge: "খ খবর ও মিডিয়া",

@@ -26,23 +26,34 @@ import {
   Loader2,
   Sparkles,
   Upload,
-  Eye
+  Eye,
+  Globe,
+  MessageSquare,
+  Clock,
+  MapPin,
+  User
 } from 'lucide-react';
 import { getData, saveData, resetData } from '../services/storageService';
 import { generateCampaignImage, suggestImagePrompt } from '../services/geminiService';
+import { TRANSLATIONS, Language } from '../constants';
 
 interface AdminDashboardProps {
   onLogout: () => void;
+  lang: Language;
+  setLang: (lang: Language) => void;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'manifesto' | 'bio' | 'settings'>('overview');
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, lang, setLang }) => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'manifesto' | 'bio' | 'suggestions' | 'settings'>('overview');
   const [news, setNews] = useState<any>(getData('NEWS'));
   const [manifesto, setManifesto] = useState<any>(getData('MANIFESTO'));
   const [bio, setBio] = useState<any>(getData('BIO'));
   const [profile, setProfile] = useState<any>(getData('PROFILE'));
   const [admins, setAdmins] = useState<any[]>(getData('ADMINS') || []);
+  const [suggestions, setSuggestions] = useState<any[]>(getData('SUGGESTIONS') || []);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+
+  const t = TRANSLATIONS[lang];
 
   // AI Image Gen State
   const [showImageGen, setShowImageGen] = useState(false);
@@ -68,15 +79,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   }, [saveStatus]);
 
-  const handleSave = (key: 'NEWS' | 'MANIFESTO' | 'BIO' | 'PROFILE' | 'ADMINS', data: any) => {
+  const handleSave = (key: 'NEWS' | 'MANIFESTO' | 'BIO' | 'PROFILE' | 'ADMINS' | 'SUGGESTIONS', data: any) => {
     try {
       saveData(key, data);
-      setSaveStatus('Changes saved successfully!');
+      setSaveStatus(lang === 'en' ? 'Changes saved successfully!' : 'পরিবর্তনগুলো সফলভাবে সেভ করা হয়েছে!');
       if (key === 'NEWS') setNews(data);
       if (key === 'MANIFESTO') setManifesto(data);
       if (key === 'BIO') setBio(data);
       if (key === 'PROFILE') setProfile(data);
       if (key === 'ADMINS') setAdmins(data);
+      if (key === 'SUGGESTIONS') setSuggestions(data);
     } catch (e) {
       alert("Storage limit exceeded. Please use shorter text or compress images.");
     }
@@ -176,36 +188,41 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     setGenPrompt('');
   };
 
+  const deleteSuggestion = (id: string) => {
+    const updated = suggestions.filter(s => s.id !== id);
+    handleSave('SUGGESTIONS', updated);
+  };
+
   const renderOverview = () => (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
           <Newspaper className="text-green-700 mb-4" size={32} />
           <h3 className="text-3xl font-bold">{news.en.length}</h3>
-          <p className="text-slate-500">Total Updates</p>
+          <p className="text-slate-500">{t.admin.news}</p>
         </div>
         <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
           <Target className="text-red-600 mb-4" size={32} />
           <h3 className="text-3xl font-bold">{manifesto.en.length}</h3>
-          <p className="text-slate-500">Manifesto Sectors</p>
+          <p className="text-slate-500">{t.admin.manifesto}</p>
         </div>
         <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-          <UserCircle className="text-blue-600 mb-4" size={32} />
-          <h3 className="text-3xl font-bold">{bio.en.length}</h3>
-          <p className="text-slate-500">Career Milestones</p>
+          <MessageSquare className="text-blue-600 mb-4" size={32} />
+          <h3 className="text-3xl font-bold">{suggestions.length}</h3>
+          <p className="text-slate-500">{t.admin.suggestions}</p>
         </div>
         <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
           <ShieldCheck className="text-purple-600 mb-4" size={32} />
           <h3 className="text-3xl font-bold">{admins.length}</h3>
-          <p className="text-slate-500">Admin Users</p>
+          <p className="text-slate-500">{lang === 'en' ? 'Admin Users' : 'অ্যাডমিন ইউজার'}</p>
         </div>
       </div>
       
       <div className="bg-slate-900 text-white p-10 rounded-[3rem] shadow-xl">
         <div className="flex justify-between items-start mb-10">
           <div>
-            <h3 className="text-2xl font-bold mb-2">Candidate Identity & Roles</h3>
-            <p className="text-slate-400">Official profile data used across the hero section and footer.</p>
+            <h3 className="text-2xl font-bold mb-2">{t.admin.identity}</h3>
+            <p className="text-slate-400">{t.admin.identity_desc}</p>
           </div>
           <div className="relative group cursor-pointer">
             <div className="w-24 h-24 rounded-full border-4 border-green-700 overflow-hidden bg-slate-800">
@@ -267,8 +284,93 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           onClick={() => handleSave('PROFILE', profile)}
           className="mt-10 bg-green-700 hover:bg-green-600 text-white px-10 py-4 rounded-2xl font-bold transition-all flex items-center gap-3 shadow-xl"
         >
-          <Save size={20} /> Update Official Profile
+          <Save size={20} /> {t.admin.save_profile}
         </button>
+      </div>
+    </div>
+  );
+
+  const renderSuggestions = () => (
+    <div className="space-y-8">
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+          <h3 className="text-xl font-bold">{t.admin.suggestions}</h3>
+          <span className="bg-slate-900 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">{suggestions.length} {lang === 'en' ? 'Total' : 'মোট'}</span>
+        </div>
+        
+        {suggestions.length === 0 ? (
+          <div className="p-20 text-center">
+            <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MessageSquare className="text-slate-300" size={32} />
+            </div>
+            <p className="text-slate-500 font-medium">{lang === 'en' ? 'No suggestions submitted yet.' : 'এখনও কোন প্রস্তাবনা জমা পড়েনি।'}</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {suggestions.map((s) => (
+              <div key={s.id} className="p-8 hover:bg-slate-50 transition-colors">
+                <div className="flex flex-col lg:flex-row gap-8">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-100">
+                        <User size={14} /> {s.fullName}
+                      </div>
+                      <div className="flex items-center gap-2 bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold border border-slate-200">
+                        <MapPin size={14} /> {s.thana}, {s.union}
+                      </div>
+                      <div className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-100">
+                        <Clock size={14} /> {new Date(s.timestamp).toLocaleString()}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">{lang === 'en' ? 'Category:' : 'বিভাগ:'} {s.category}</h4>
+                      <div className="p-6 bg-white border border-slate-100 rounded-3xl text-slate-800 leading-relaxed shadow-sm">
+                        {s.suggestion}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                       <div>
+                         <div className="text-[9px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Phone' : 'ফোন'}</div>
+                         <div className="text-sm font-bold text-slate-700">{s.phone}</div>
+                       </div>
+                       <div>
+                         <div className="text-[9px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Email' : 'ইমেইল'}</div>
+                         <div className="text-sm font-bold text-slate-700">{s.email}</div>
+                       </div>
+                       <div>
+                         <div className="text-[9px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Profession' : 'পেশা'}</div>
+                         <div className="text-sm font-bold text-slate-700">{s.profession}</div>
+                       </div>
+                       <div>
+                         <div className="text-[9px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Village' : 'গ্রাম'}</div>
+                         <div className="text-sm font-bold text-slate-700">{s.village}</div>
+                       </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex lg:flex-col justify-end gap-3">
+                    <button 
+                      onClick={() => deleteSuggestion(s.id)}
+                      className="p-4 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-sm group"
+                      title="Delete Suggestion"
+                    >
+                      <Trash2 size={24} className="group-active:scale-90 transition-transform" />
+                    </button>
+                    <a 
+                      href={`mailto:${s.email}`}
+                      className="p-4 bg-green-50 text-green-700 rounded-2xl hover:bg-green-700 hover:text-white transition-all shadow-sm group"
+                      title="Reply via Email"
+                    >
+                      <Save size={24} className="group-active:scale-90 transition-transform" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -278,7 +380,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm flex flex-col h-full">
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
-            <UserPlus className="text-green-700" /> Create New Admin User
+            <UserPlus className="text-green-700" /> {lang === 'en' ? 'Create New Admin User' : 'নতুন অ্যাডমিন ইউজার তৈরি করুন'}
           </h3>
           <form onSubmit={handleAddAdmin} className="space-y-6 flex-1">
             <div className="space-y-2">
@@ -320,18 +422,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
         <div className="bg-slate-900 text-white rounded-[2.5rem] p-10 shadow-xl flex flex-col h-full">
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
-            <Fingerprint className="text-green-500" /> Security Settings
+            <Fingerprint className="text-green-500" /> {lang === 'en' ? 'Security Settings' : 'নিরাপত্তা সেটিংস'}
           </h3>
           <div className="flex-1 space-y-8">
             <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
-              <p className="text-sm text-slate-400 mb-1">Logged in as:</p>
+              <p className="text-sm text-slate-400 mb-1">{lang === 'en' ? 'Logged in as:' : 'লগ-ইন আছেন:'}</p>
               <h4 className="text-xl font-bold text-white">{currentAdmin?.username}</h4>
               <span className="inline-block mt-2 px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest">{currentAdmin?.role}</span>
             </div>
             
             <form onSubmit={handleChangeOwnPassword} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase">Change My Password</label>
+                <label className="text-xs font-bold text-slate-500 uppercase">{lang === 'en' ? 'Change My Password' : 'পাসওয়ার্ড পরিবর্তন করুন'}</label>
                 <input 
                   name="new_password"
                   type="password"
@@ -340,7 +442,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 />
               </div>
               <button className="w-full bg-green-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-500 transition-all">
-                <Save size={20} /> Update My Password
+                <Save size={20} /> {lang === 'en' ? 'Update My Password' : 'পাসওয়ার্ড আপডেট করুন'}
               </button>
             </form>
           </div>
@@ -352,7 +454,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const renderNewsManager = () => (
     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
       <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-        <h3 className="text-xl font-bold">Campaign News Feed</h3>
+        <h3 className="text-xl font-bold">{t.admin.news}</h3>
         <button 
           onClick={() => {
             const newId = Date.now().toString();
@@ -362,7 +464,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           }}
           className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800 transition-all"
         >
-          <Plus size={18} /> New Entry
+          <Plus size={18} /> {lang === 'en' ? 'New Entry' : 'নতুন এন্ট্রি'}
         </button>
       </div>
       <div className="divide-y divide-slate-100">
@@ -467,7 +569,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 }}
                 className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors flex items-center gap-2 ml-auto"
               >
-                <Trash2 size={14} /> Delete Update
+                <Trash2 size={14} /> {lang === 'en' ? 'Delete Update' : 'মুছে ফেলুন'}
               </button>
             </div>
           </div>
@@ -478,7 +580,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           onClick={() => handleSave('NEWS', news)}
           className="bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-lg transition-all"
         >
-          <Save size={20} /> Deploy News Updates
+          <Save size={20} /> {t.admin.save_news}
         </button>
       </div>
 
@@ -541,7 +643,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const renderBioManager = () => (
     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
       <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-        <h3 className="text-xl font-bold">Biography Timeline</h3>
+        <h3 className="text-xl font-bold">{t.admin.bio}</h3>
         <button 
           onClick={() => {
             const newItemEn = { year: 'Year', title: 'Milestone Title', description: 'Description...', image: '' };
@@ -550,7 +652,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           }}
           className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
         >
-          <Plus size={16} /> Add Milestone
+          <Plus size={16} /> {lang === 'en' ? 'Add Milestone' : 'মাইলফলক যোগ করুন'}
         </button>
       </div>
       <div className="p-8 space-y-8">
@@ -594,7 +696,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       </div>
       <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
         <button onClick={() => handleSave('BIO', bio)} className="bg-green-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2">
-          <Save size={18} /> Save Biography
+          <Save size={18} /> {t.admin.save_bio}
         </button>
       </div>
     </div>
@@ -603,7 +705,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const renderManifestoManager = () => (
     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
       <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-        <h3 className="text-xl font-bold">Election Manifesto (5 Sectors)</h3>
+        <h3 className="text-xl font-bold">{t.admin.manifesto}</h3>
       </div>
       <div className="p-8 space-y-12">
         {manifesto.en.map((sector: any, idx: number) => (
@@ -658,11 +760,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       </div>
       <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
         <button onClick={() => handleSave('MANIFESTO', manifesto)} className="bg-green-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2">
-          <Save size={18} /> Update Manifesto
+          <Save size={18} /> {t.admin.save_manifesto}
         </button>
       </div>
     </div>
   );
+
+  const getActiveTabTitle = () => {
+    switch (activeTab) {
+      case 'overview': return t.admin.overview;
+      case 'news': return t.admin.news;
+      case 'manifesto': return t.admin.manifesto;
+      case 'bio': return t.admin.bio;
+      case 'suggestions': return t.admin.suggestions;
+      case 'settings': return t.admin.settings;
+      default: return "";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 flex">
@@ -670,25 +784,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         <div className="flex items-center gap-3 mb-12">
           <div className="bg-green-700 p-2.5 rounded-2xl shadow-lg ring-4 ring-green-900/30"><Settings size={28} /></div>
           <div className="flex flex-col">
-             <span className="font-black text-xl tracking-tighter leading-none">CMS HUB</span>
-             <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mt-1">Campaign Center</span>
+             <span className="font-black text-xl tracking-tighter leading-none">{t.admin.hub}</span>
+             <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mt-1">{t.admin.center}</span>
           </div>
         </div>
         <nav className="space-y-3 flex-1">
           <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'overview' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <LayoutDashboard size={20} /> Overview
+            <LayoutDashboard size={20} /> {t.admin.overview}
           </button>
           <button onClick={() => setActiveTab('news')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'news' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <Newspaper size={20} /> News Feed
+            <Newspaper size={20} /> {t.admin.news}
           </button>
           <button onClick={() => setActiveTab('manifesto')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'manifesto' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <Target size={20} /> Manifesto
+            <Target size={20} /> {t.admin.manifesto}
           </button>
           <button onClick={() => setActiveTab('bio')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'bio' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <UserCircle size={20} /> Biography
+            <UserCircle size={20} /> {t.admin.bio}
+          </button>
+          <button onClick={() => setActiveTab('suggestions')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'suggestions' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+            <MessageSquare size={20} /> {t.admin.suggestions}
           </button>
           <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'settings' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <Lock size={20} /> Account Access
+            <Lock size={20} /> {t.admin.settings}
           </button>
         </nav>
         <div className="pt-8 border-t border-white/10 space-y-4">
@@ -700,34 +817,57 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
              </div>
           </div>
           <button onClick={resetData} className="w-full flex items-center gap-3 px-5 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-all text-xs font-black uppercase tracking-widest">
-            <RefreshCcw size={16} /> Factory Reset
+            <RefreshCcw size={16} /> {t.admin.reset}
           </button>
           <button onClick={onLogout} className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-white bg-white/5 hover:bg-white/10 transition-all text-sm font-bold shadow-sm">
-            <LogOut size={18} /> Exit Admin
+            <LogOut size={18} /> {t.admin.exit}
           </button>
         </div>
       </div>
       <div className="ml-72 flex-1 p-12 min-h-screen">
-        <header className="flex justify-between items-center mb-12">
+        <header className="flex justify-between items-center mb-12 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 capitalize tracking-tight">{activeTab} Manager</h1>
+            <h1 className="text-4xl font-black text-slate-900 capitalize tracking-tight">{getActiveTabTitle()} {t.admin.manager}</h1>
             <p className="text-slate-500 font-medium mt-1">Official Campaign Management System for Advocate Zainul Abedin.</p>
           </div>
-          <div className="flex items-center gap-4">
-            {saveStatus && (
-              <div className="bg-green-700 text-white px-8 py-4 rounded-[2rem] flex items-center gap-3 animate-fade-in shadow-2xl border border-green-600 ring-4 ring-green-100">
-                <CheckCircle2 size={24} /> 
-                <span className="font-bold">{saveStatus}</span>
+          <div className="flex items-center gap-6">
+            {/* Language Toggle */}
+            <div className="flex flex-col items-end gap-2">
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t.admin.lang_preference}</span>
+              <div className="flex items-center bg-slate-100 rounded-full p-1.5 border border-slate-200">
+                <button 
+                  onClick={() => setLang('en')}
+                  className={`px-4 py-2 text-xs font-bold rounded-full transition-all flex items-center gap-2 ${lang === 'en' ? 'bg-white text-green-700 shadow-md ring-1 ring-green-100' : 'text-slate-400'}`}
+                >
+                  <Globe size={12} /> EN
+                </button>
+                <button 
+                  onClick={() => setLang('bn')}
+                  className={`px-4 py-2 text-xs font-bold rounded-full transition-all flex items-center gap-2 ${lang === 'bn' ? 'bg-white text-green-700 shadow-md ring-1 ring-green-100' : 'text-slate-400'}`}
+                >
+                  <Globe size={12} /> বাংলা
+                </button>
               </div>
-            )}
-            <button 
-              onClick={onLogout}
-              className="bg-white border border-slate-200 text-red-600 p-4 rounded-2xl hover:bg-red-50 hover:border-red-200 transition-all shadow-sm flex items-center gap-2 font-bold"
-              title="Logout"
-            >
-              <LogOut size={20} />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
+            </div>
+
+            <div className="h-10 w-px bg-slate-200"></div>
+
+            <div className="flex items-center gap-4">
+              {saveStatus && (
+                <div className="bg-green-700 text-white px-8 py-4 rounded-[2rem] flex items-center gap-3 animate-fade-in shadow-2xl border border-green-600 ring-4 ring-green-100">
+                  <CheckCircle2 size={24} /> 
+                  <span className="font-bold">{saveStatus}</span>
+                </div>
+              )}
+              <button 
+                onClick={onLogout}
+                className="bg-slate-900 text-white p-4 rounded-2xl hover:bg-slate-800 transition-all shadow-lg flex items-center gap-2 font-bold"
+                title="Logout"
+              >
+                <LogOut size={20} />
+                <span className="hidden sm:inline">{t.admin.exit}</span>
+              </button>
+            </div>
           </div>
         </header>
         <main className="pb-24">
@@ -735,6 +875,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           {activeTab === 'news' && renderNewsManager()}
           {activeTab === 'manifesto' && renderManifestoManager()}
           {activeTab === 'bio' && renderBioManager()}
+          {activeTab === 'suggestions' && renderSuggestions()}
           {activeTab === 'settings' && renderSettings()}
         </main>
       </div>

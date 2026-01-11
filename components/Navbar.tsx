@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { Menu, X, Bot, Globe } from 'lucide-react';
+import { Menu, X, Bot, Globe, MessageSquare } from 'lucide-react';
 import { TRANSLATIONS, Language } from '../constants';
 import BnpLogo from './BnpLogo';
 
 interface NavbarProps {
-  onNavigate?: (page: 'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us') => void;
+  onNavigate?: (page: 'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'feedback') => void;
   lang: Language;
   setLang: (lang: Language) => void;
 }
@@ -19,6 +19,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
     { name: t.nav.vision, href: '#vision', value: 'vision' as const },
     { name: t.nav.biography, href: '#bio', value: 'biography' as const },
     { name: t.nav.updates, href: '#updates', value: 'updates' as const },
+    { name: t.nav.feedback, href: '#feedback', value: 'feedback' as const },
     { name: t.nav.ai, href: '#ai-assistant', value: 'ai-assistant' as const },
   ];
 
@@ -58,10 +59,13 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
                 className={`flex items-center gap-1.5 transition-colors font-medium text-sm lg:text-base ${
                   link.value === 'ai-assistant' 
                     ? 'text-green-700 font-bold bg-green-50 px-3 py-1 rounded-full border border-green-100' 
+                    : link.value === 'feedback'
+                    ? 'text-red-600 font-bold'
                     : 'text-slate-600 hover:text-green-700'
                 }`}
               >
                 {link.value === 'ai-assistant' && <Bot size={16} />}
+                {link.value === 'feedback' && <MessageSquare size={16} />}
                 {link.name}
               </a>
             ))}
@@ -70,7 +74,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
             <div className="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
               <button 
                 onClick={() => setLang('en')}
-                className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${lang === 'en' ? 'bg-white text-green-700 shadow-sm' : 'text-slate-50'}`}
+                className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${lang === 'en' ? 'bg-white text-green-700 shadow-sm' : 'text-slate-500'}`}
               >
                 EN
               </button>

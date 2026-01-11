@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, CheckCircle, Award, Landmark, Gavel, ShieldCheck, Timer, Target, Users, Zap } from 'lucide-react';
+import { ArrowRight, CheckCircle, Award, Landmark, Gavel, ShieldCheck, Timer, Target, Users, Zap, Newspaper } from 'lucide-react';
 import { CANDIDATE_IMAGE, TRANSLATIONS, Language, ELECTION_DATE } from '../constants';
 import { getData } from '../services/storageService';
 
@@ -99,15 +99,19 @@ const Hero: React.FC<HeroProps> = ({ onNavigate, lang }) => {
             <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start">
               <button 
                 onClick={() => onNavigate?.('vision')}
-                className="bg-green-700 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-green-800 transition-all flex items-center justify-center gap-3 shadow-[0_20px_40px_-10px_rgba(21,128,61,0.4)] hover:-translate-y-1"
+                className="relative group bg-gradient-to-br from-green-600 to-green-800 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-[0_20px_40px_-10px_rgba(21,128,61,0.4)] hover:shadow-[0_25px_50px_-10px_rgba(21,128,61,0.6)] hover:-translate-y-1 overflow-hidden"
               >
-                {t.hero.cta_manifesto} <ArrowRight size={22} />
+                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                <span className="relative z-10">{t.hero.cta_manifesto}</span>
+                <ArrowRight size={22} className="relative z-10 group-hover:translate-x-1 transition-transform" />
               </button>
+              
               <button 
                 onClick={() => onNavigate?.('updates')}
-                className="bg-white border-2 border-slate-200 text-slate-800 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-slate-50 hover:border-red-200 hover:text-red-700 transition-all flex items-center justify-center gap-3"
+                className="group bg-white border-2 border-slate-900 text-slate-900 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-slate-900 hover:text-white transition-all duration-300 flex items-center justify-center gap-3 shadow-lg"
               >
-                {t.hero.cta_updates}
+                <Newspaper size={20} className="group-hover:rotate-12 transition-transform" />
+                <span>{t.hero.cta_updates}</span>
               </button>
             </div>
           </div>

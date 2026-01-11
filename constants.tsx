@@ -18,7 +18,7 @@ export const CONTACT_EMAIL = "adv.zabedin@gmail.com";
 export const OFFICE_ADDRESS_EN = "Muladi & Babuganj, Barisal";
 export const OFFICE_ADDRESS_BN = "মুলাদী ও বাবুগঞ্জ, বরিশাল";
 
-// Official portrait - Using a professional placeholder that matches the uploaded candidate's profile
+// Official portrait
 export const CANDIDATE_IMAGE = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800&h=1000";
 
 export type Language = 'en' | 'bn';
@@ -32,6 +32,7 @@ export const TRANSLATIONS = {
       updates: "Updates",
       ai: "AI Assistant",
       support: "Support Us",
+      feedback: "Your Opinion",
       back: "Back to Home"
     },
     hero: {
@@ -46,6 +47,48 @@ export const TRANSLATIONS = {
       stat_roadmap: "Development Roadmap",
       role1: "Vice-Chairman, BNP & President, Jatiotabadi Ainjibi Forum",
       role2: "Vice-Chairman, Bangladesh Bar Council & Former President, SCBA"
+    },
+    feedback: {
+      title: "Your Opinion, Our Policy",
+      subtitle: "Share your thoughts to build the Bangladesh of the future.",
+      form_heading: "Submit Your Suggestion",
+      fullName: "Full Name *",
+      gender: "Gender *",
+      profession: "Profession *",
+      organization: "Organization/Institution *",
+      phone: "Mobile Number *",
+      email: "Email *",
+      thana: "Upazila / Thana *",
+      union: "Union *",
+      village: "Village *",
+      category: "Policy Category *",
+      message: "Your Detailed Suggestion",
+      submit: "Send Suggestion",
+      success_title: "Thank You for Your Vision!",
+      success_desc: "Your suggestion has been recorded and will be reviewed by our policy committee for the 2026 Manifesto.",
+      gender_options: ["Male", "Female", "Other"],
+      thana_options: ["Babuganj", "Muladi"],
+      unions: {
+        "Babuganj": ["Jahangirnagar Union", "Kedarpur Union", "Dehergoti Union", "Chandpasha Union", "Rahmatpur Union", "Madhabpasha Union"],
+        "Muladi": ["Batamara Union", "Nazirpur Union", "Safipur Union", "Gachua Union", "Charkalekhan Union", "Muladi Union", "Kazirchar Union", "Muladi Pourashava"]
+      },
+      categories: [
+        "Infrastructure", 
+        "Education", 
+        "Healthcare", 
+        "Agriculture", 
+        "Youth & IT", 
+        "Legal Reform", 
+        "Employment", 
+        "Expatriates", 
+        "Family Card", 
+        "Sports", 
+        "Environment", 
+        "Farmer Card", 
+        "Honor for Imams & Muazzins", 
+        "Corruption-free Bangladesh", 
+        "Other"
+      ]
     },
     vision: {
       heading: "Our Commitment",
@@ -124,6 +167,27 @@ export const TRANSLATIONS = {
       links: "Quick Links",
       contact: "Contact Office",
       rights: "Official Campaign of Zainul Abedin. Authorized by BNP Election Committee for General Election 2026."
+    },
+    admin: {
+      dashboard: "Dashboard",
+      overview: "Overview",
+      news: "News Feed",
+      manifesto: "Manifesto",
+      bio: "Biography",
+      suggestions: "Suggestions",
+      settings: "Account Access",
+      hub: "CMS HUB",
+      center: "Campaign Center",
+      exit: "Exit Admin",
+      save_profile: "Update Official Profile",
+      save_news: "Deploy News Updates",
+      save_manifesto: "Update Manifesto",
+      save_bio: "Save Biography",
+      reset: "Factory Reset",
+      identity: "Candidate Identity & Roles",
+      identity_desc: "Official profile data used across the hero section and footer.",
+      manager: "Manager",
+      lang_preference: "Language Preference"
     }
   },
   bn: {
@@ -134,6 +198,7 @@ export const TRANSLATIONS = {
       updates: "আপডেট",
       ai: "এআই অ্যাসিস্ট্যান্ট",
       support: "সহযোগিতা করুন",
+      feedback: "আপনার মতামত",
       back: "মূল পাতায় ফিরুন"
     },
     hero: {
@@ -148,6 +213,48 @@ export const TRANSLATIONS = {
       stat_roadmap: "উন্নয়ন রোডম্যাপ",
       role1: "ভাইস চেয়ারম্যান — বিএনপি ও সভাপতি — জাতীয়তাবাদী আইনজীবী ফোরাম",
       role2: "ভাইস চেয়ারম্যান — বাংলাদেশ বার কাউন্সিল ও সাবেক সভাপতি — সুপ্রিমকোর্ট বার"
+    },
+    feedback: {
+      title: "আপনার মতামত, আমাদের নীতি",
+      subtitle: "আগামীর বাংলাদেশ বিনির্মাণে আপনার মতামত দিন।",
+      form_heading: "আপনার প্রস্তাবনা জমা দিন",
+      fullName: "পুরো নাম *",
+      gender: "লিঙ্গ *",
+      profession: "পেশা *",
+      organization: "প্রতিষ্ঠান/ইনস্টিটিউশন *",
+      phone: "মোবাইল নম্বর *",
+      email: "ইমেইল *",
+      thana: "উপজেলা/ Thana *",
+      union: "ইউনিয়ন/ Union *",
+      village: "গ্রাম/Village *",
+      category: "বিষয়ের বিভাগ *",
+      message: "আপনার বিস্তারিত প্রস্তাবনা",
+      submit: "মতামত পাঠান",
+      success_title: "আপনার মতামতের জন্য ধন্যবাদ!",
+      success_desc: "আপনার প্রস্তাবনাটি সংরক্ষিত হয়েছে এবং ২০২৬ সালের নির্বাচনী ইশতেহার তৈরির জন্য আমাদের পলিসি কমিটি এটি পর্যালোচনা করবে।",
+      gender_options: ["পুরুষ", "নারী", "অন্যান্য"],
+      thana_options: ["বাবুগঞ্জ", "মুলাদী"],
+      unions: {
+        "বাবুগঞ্জ": ["জাহাঙ্গীরনগর ইউনিয়ন", "কেদারপুর ইউনিয়ন", "দেহেরগতি ইউনিয়ন", "চাঁদপাশা ইউনিয়ন", "রহমতপুর ইউনিয়ন", "মাধবপাশা ইউনিয়ন"],
+        "মুলাদী": ["বাটামারা ইউনিয়ন", "নাজিরপুর ইউনিয়ন", "সফিপুর ইউনিয়ন", "গাছুয়া ইউনিয়ন", "চরকালেখান ইউনিয়ন", "মুলাদী ইউনিয়ন", "কাজীরচর ইউনিয়ন", "মুলাদী পৌরসভা"]
+      },
+      categories: [
+        "অবকাঠামো", 
+        "শিক্ষা", 
+        "স্বাস্থ্যসেবা", 
+        "কৃষি", 
+        "তরুণ ও আইটি", 
+        "আইনি সংস্কার", 
+        "কর্মসংস্থান", 
+        "প্রবাসী", 
+        "ফ্যামিলি কার্ড", 
+        "ক্রীড়া", 
+        "পরিবেশ", 
+        "কৃষক কার্ড", 
+        "ইমাম মুয়াজ্জিনের সম্মান", 
+        "দুর্নীতিমুক্ত বাংলাদেশ", 
+        "অন্যান্য"
+      ]
     },
     vision: {
       heading: "আমাদের অঙ্গীকার",
@@ -167,7 +274,7 @@ export const TRANSLATIONS = {
       heading: "বাংলাদেশের আইনি অঙ্গনের এক উজ্জ্বল নক্ষত্র",
       title: "ন্যায়বিচারের জন্য উৎসর্গীকৃত জীবন",
       subtitle: "সিনিয়র এ্যাডভোকেট জয়নুল আবেদীন বাংলাদেশ সুপ্রিম কোর্টের একজন অত্যন্ত সম্মানিত ও প্রথিতযশা আইনজীবী। দীর্ঘ কয়েক দশকের আইনি ক্যারিয়ারে তিনি দেশের বিচার বিভাগ ও আইনি অঙ্গনে নিজেকে এক শীর্ষস্থানীয় ব্যক্তিত্ব হিসেবে প্রতিষ্ঠিত করেছেন।",
-      detailed_bio: "জনাব আবেদীন ১৯৮০ সালে তাঁর আইনি যাত্রা শুরু করেন এবং বাংলাদেশ বার কাউন্সিলে এ্যাডভোকেট হিসেবে তালিকাভুক্ত হন। ২০০৩ সালে তিনি বাংলাদেশ সুপ্রিম কোর্টের 'সিনিয়র এ্যাডভোকেট' হিসেবে মর্যাদা লাভ করেন। তাঁর বর্ণাঢ্য ক্যারিয়ারে তিনি একাধিকবার সুপ্রিম কোর্ট আইনজীবী সমিতির সভাপতি নির্বাচিত হয়েছেন এবং বাংলাদেশ বার কাউন্সিলের নির্বাচিত সদস্য হিসেবে দায়িত্ব পালন করেছেন। ১৯৮৮ সালে প্রতিষ্ঠিত 'জয়নুল আবেদীন অ্যান্ড অ্যাসোসিয়েটস'-এর প্রতিষ্ঠাতা হিসেবে তিনি দেওয়ানি, ফৌজদারি ও সাংবিধানিক আইনের অসংখ্য গুরুত্বপূর্ণ মামলা পরিচালনা করে আসছেন।",
+      detailed_bio: "জনাব আবেদীন ১৯৮০ সালে তাঁর আইনি যাত্রা শুরু করেন এবং বাংলাদেশ বার কাউন্সিলে এ্যাডভোকেট হিসেবে তালিকাভুক্ত হন। ২০০৩ সালে তিনি বাংলাদেশ সুপ্রিম কোর্টের 'সিনিয়র এ্যাডভোকেট' হিসেবে মর্যাদা লাভ করেন। তাঁর বর্ণাধ্য ক্যারিয়ারে তিনি একাধিকবার সুপ্রিম কোর্ট আইনজীবী সমিতির সভাপতি নির্বাচিত হয়েছেন এবং বাংলাদেশ বার কাউন্সিলের নির্বাচিত সদস্য হিসেবে দায়িত্ব পালন করেছেন। ১৯৮৮ সালে প্রতিষ্ঠিত 'জয়নুল আবেদীন অ্যান্ড অ্যাসোসিয়েটস'-এর প্রতিষ্ঠাতা হিসেবে তিনি দেওয়ানি, ফৌজদারি ও সাংবিধানিক আইনের অসংখ্য গুরুত্বপূর্ণ মামলা পরিচালনা করে আসছেন।",
       stat_years: "সেবার বছর",
       journey: "আইনি ও রাজনৈতিক যাত্রা",
       chronicles: "সেবার ইতিবৃত্ত",
@@ -226,6 +333,27 @@ export const TRANSLATIONS = {
       links: "দ্রুত লিঙ্ক",
       contact: "যোগাযোগ",
       rights: "জয়নুল আবেদীনের অফিসিয়াল ক্যাম্পেইন। ২০২৬ জাতীয় নির্বাচনের জন্য বিএনপি নির্বাচন কমিটি দ্বারা অনুমোদিত।"
+    },
+    admin: {
+      dashboard: "ড্যাশবোর্ড",
+      overview: "ওভারভিউ",
+      news: "নিউজ ফিড",
+      manifesto: "ইশতেহার",
+      bio: "জীবনী",
+      suggestions: "প্রস্তাবনাসমূহ",
+      settings: "অ্যাকাউন্ট অ্যাক্সেস",
+      hub: "সিএমএস হাব",
+      center: "ক্যাম্পেইন সেন্টার",
+      exit: "প্রস্থান করুন",
+      save_profile: "অফিসিয়াল প্রোফাইল আপডেট করুন",
+      save_news: "নিউজ আপডেট সেভ করুন",
+      save_manifesto: "ইশতেহার আপডেট করুন",
+      save_bio: "জীবনী সেভ করুন",
+      reset: "ফ্যাক্টরি রিসেট",
+      identity: "প্রার্থীর পরিচয় ও ভূমিকা",
+      identity_desc: "হিরো সেকশন এবং ফুটারে ব্যবহৃত অফিসিয়াল প্রোফাইল ডাটা।",
+      manager: "ম্যানেজার",
+      lang_preference: "ভাষা পছন্দ"
     }
   }
 };
@@ -277,7 +405,7 @@ export const getFullManifesto = (lang: Language) => [
       "Sustainable dredging projects to improve river navigation.",
       "Compensation and rehabilitation for erosion-affected families."
     ] : [
-      "সব ঝুঁকিপূর্ণ পয়েন্টে স্থায়ী সিসি-ব্লক বাঁধ নির্মাণ।",
+      "সব ঝুঁকিপূর্ণ পয়েন্টে স্থায়ী সসিসি-ব্লক বাঁধ নির্মাণ।",
       "নদীর নাব্যতা বৃদ্ধির জন্য টেকসই ড্রেজিং প্রকল্প।",
       "নদী ভাঙনে ক্ষতিগ্রস্ত পরিবারের ক্ষতিপূরণ ও পুনর্বাসন।"
     ]
@@ -359,7 +487,7 @@ export const getNewsUpdates = (lang: Language) => [
     id: "1",
     date: lang === 'en' ? "Oct 24, 2023" : "২৪ অক্টোবর, ২০২৩",
     title: lang === 'en' ? "Advocate Zainul Abedin meets with Local Elders in Babuganj" : "বাবুগঞ্জে স্থানীয় মুরুব্বিদের সাথে এ্যাডভোকেট জয়নুল আবেদীনের মতবিনিময়",
-    excerpt: lang === 'en' ? "The candidate discussed grassroots development plans for General Election 2026..." : "প্রার্থী ২০২৬ সালের জাতীয় নির্বাচনের তৃণমূল উন্নয়ন পরিকল্পনা নিয়ে আলোচনা করেন...",
+    excerpt: lang === 'en' ? "The candidate discussed grassroots development plans for General Election 2026..." : "প্রার্থী ২০ ২৬ সালের জাতীয় নির্বাচনের তৃণমূল উন্নয়ন পরিকল্পনা নিয়ে আলোচনা করেন...",
     image: "https://picsum.photos/seed/campaign1/800/600",
     category: lang === 'en' ? "Community" : "সামাজিক"
   },

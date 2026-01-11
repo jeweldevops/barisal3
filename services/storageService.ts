@@ -7,6 +7,7 @@ const KEYS = {
   BIO: 'zainul_campaign_bio',
   PROFILE: 'zainul_campaign_profile',
   ADMINS: 'zainul_campaign_admins',
+  SUGGESTIONS: 'zainul_campaign_suggestions',
 };
 
 export const initStorage = () => {
@@ -51,6 +52,9 @@ export const initStorage = () => {
       { username: 'admin', password: 'bnp2026', role: 'Super Admin' },
       { username: 'jewel', password: 'Dhaka@1216', role: 'Admin' }
     ]));
+  }
+  if (!localStorage.getItem(KEYS.SUGGESTIONS)) {
+    localStorage.setItem(KEYS.SUGGESTIONS, JSON.stringify([]));
   }
 };
 

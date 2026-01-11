@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Language, TRANSLATIONS, getNewsUpdates, CANDIDATE_NAME } from '../constants';
-import { ArrowLeft, Search, Filter, Calendar, MapPin, Share2, ChevronRight, Bell, Facebook, Twitter, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Calendar, MapPin, Share2, ChevronRight, Bell, Facebook, Twitter, MessageCircle, CheckCircle } from 'lucide-react';
 
 interface UpdatesPageProps {
   onBack: () => void;
@@ -13,6 +13,10 @@ const UpdatesPage: React.FC<UpdatesPageProps> = ({ onBack, lang }) => {
   const allUpdates = getNewsUpdates(lang);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(lang === 'en' ? 'All' : 'সব');
+
+  // Newsletter State
+  const [email, setEmail] = useState('');
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   const categories = lang === 'en' 
     ? ['All', 'Press Release', 'Community', 'Rallies', 'Legal Aid']
@@ -45,6 +49,29 @@ const UpdatesPage: React.FC<UpdatesPageProps> = ({ onBack, lang }) => {
     if (shareUrl) {
       window.open(shareUrl, '_blank', 'width=600,height=400');
     }
+  };
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes('@')) return;
+
+    // Save to local storage
+    const storageKey = 'campaign_newsletter_emails';
+    const existingEmails = localStorage.getItem(storageKey);
+    const emailsArray = existingEmails ? JSON.parse(existingEmails) : [];
+    
+    if (!emailsArray.includes(email)) {
+      emailsArray.push(email);
+      localStorage.setItem(storageKey, JSON.stringify(emailsArray));
+    }
+
+    setIsSubscribed(true);
+    setEmail('');
+
+    // Reset success message after 5 seconds
+    setTimeout(() => {
+      setIsSubscribed(false);
+    }, 5000);
   };
 
   return (
@@ -190,18 +217,48 @@ const UpdatesPage: React.FC<UpdatesPageProps> = ({ onBack, lang }) => {
 
         {/* Newsletter Section */}
         <div className="mt-20 bg-slate-900 rounded-[3rem] p-8 md:p-16 text-white text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-green-700/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative z-10 max-w-2xl mx-auto">
             <h3 className="text-3xl font-bold mb-4">{t.updates.newsletter_title}</h3>
             <p className="text-slate-400 mb-10">{t.updates.newsletter_desc}</p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <input type="email" placeholder={lang === 'en' ? "Enter your email" : "ইমেইল লিখুন"} className="flex-1 bg-white/10 border border-white/20 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all" />
-              <button className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-xl">
-                {t.updates.subscribe}
-              </button>
-            </div>
+            
+            {isSubscribed ? (
+              <div className="bg-green-700/20 border border-green-500/30 rounded-2xl p-6 flex items-center justify-center gap-3 animate-fade-in">
+                <CheckCircle className="text-green-400" size={24} />
+                <span className="font-bold text-green-400">
+                  {lang === 'en' ? "Successfully subscribed!" : "সফলভাবে সাবস্ক্রাইব করা হয়েছে!"}
+                </span>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4">
+                <input 
+                  type="email" 
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={lang === 'en' ? "Enter your email" : "ইমেইল লিখুন"} 
+                  className="flex-1 bg-white/10 border border-white/20 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all text-white placeholder:text-slate-500" 
+                />
+                <button 
+                  type="submit"
+                  className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-xl active:scale-95"
+                >
+                  {t.updates.subscribe}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };

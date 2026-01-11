@@ -8,16 +8,17 @@ import BiographyPage from './components/BiographyPage';
 import UpdatesPage from './components/UpdatesPage';
 import AIAssistantPage from './components/AIAssistantPage';
 import SupportUsPage from './components/SupportUsPage';
+import FeedbackPage from './components/FeedbackPage';
 import AdminDashboard from './components/AdminDashboard';
 import BnpLogo from './components/BnpLogo';
 import { initStorage, getData } from './services/storageService';
 import { TRANSLATIONS, Language, CANDIDATE_IMAGE, CANDIDATE_NAME, CANDIDATE_NAME_BN, PARTY, PARTY_BN, CONTACT_PHONE, CONTACT_EMAIL, OFFICE_ADDRESS_EN, OFFICE_ADDRESS_BN } from './constants';
-import { Calendar, ChevronRight, Mail, Phone, MapPin, Facebook, Twitter, Youtube, Instagram, ArrowRight, Sparkles, Bot, Lock, Music, X, User } from 'lucide-react';
+import { Calendar, ChevronRight, Mail, Phone, MapPin, Facebook, Twitter, Youtube, Instagram, ArrowRight, Sparkles, Bot, Lock, Music, X, User, Building2, Camera, MessageCircle, Lightbulb } from 'lucide-react';
 
 const SESSION_KEY = 'zainul_admin_session';
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'admin'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'feedback' | 'admin'>('home');
   const [lang, setLang] = useState<Language>('en');
   const [currentAdmin, setCurrentAdmin] = useState<any>(null);
   const [showLogin, setShowLogin] = useState(false);
@@ -130,6 +131,7 @@ const App: React.FC = () => {
               <li><button onClick={() => setCurrentPage('vision')} className="hover:text-red-400 transition-colors">{t.nav.vision}</button></li>
               <li><button onClick={() => setCurrentPage('biography')} className="hover:text-red-400 transition-colors">{t.nav.biography}</button></li>
               <li><button onClick={() => setCurrentPage('updates')} className="hover:text-red-400 transition-colors">{t.nav.updates}</button></li>
+              <li><button onClick={() => setCurrentPage('feedback')} className="hover:text-red-400 transition-colors">{t.nav.feedback}</button></li>
               <li>
                 {currentAdmin ? (
                   <button onClick={() => setCurrentPage('admin')} className="hover:text-green-500 transition-colors flex items-center gap-1 font-bold text-green-500"><Lock size={12}/> Dashboard</button>
@@ -157,7 +159,7 @@ const App: React.FC = () => {
   );
 
   if (currentPage === 'admin' && currentAdmin) return (
-    <AdminDashboard onLogout={handleLogout} />
+    <AdminDashboard onLogout={handleLogout} lang={lang} setLang={setLang} />
   );
 
   return (
@@ -166,7 +168,7 @@ const App: React.FC = () => {
       
       {showLogin && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative">
+          <div className="bg-white rounded-[2rem] p-8 max-sm w-full shadow-2xl relative">
             <button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900"><X size={24}/></button>
             <h3 className="text-2xl font-bold mb-6 text-center">CMS Access</h3>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -208,6 +210,8 @@ const App: React.FC = () => {
         <AIAssistantPage onBack={() => setCurrentPage('home')} lang={lang} />
       ) : currentPage === 'support-us' ? (
         <SupportUsPage onBack={() => setCurrentPage('home')} lang={lang} />
+      ) : currentPage === 'feedback' ? (
+        <FeedbackPage onBack={() => setCurrentPage('home')} lang={lang} />
       ) : (
         <main>
           <Hero onNavigate={setCurrentPage} lang={lang} />
@@ -256,6 +260,29 @@ const App: React.FC = () => {
                 <div className="order-1 lg:order-2 relative">
                   <div className="rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 border border-slate-700">
                     <img src={profile.image || CANDIDATE_IMAGE} alt={profile.name_en} className="w-full h-auto object-cover grayscale-[30%] hover:grayscale-0 transition-all duration-700" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* New Feedback/Opinion Section on Home Page */}
+          <section className="py-24 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="bg-slate-50 rounded-[3rem] p-8 md:p-16 border border-slate-100 flex flex-col lg:flex-row items-center justify-between gap-12 relative overflow-hidden">
+                <div className="relative z-10 max-w-2xl text-center lg:text-left">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 border border-green-200 text-green-700 text-sm font-bold mb-6">
+                    <Lightbulb size={16} /> {lang === 'en' ? 'Participatory Policy' : 'অংশগ্রহণমূলক নীতি'}
+                  </div>
+                  <h3 className="text-4xl font-bold mb-6 text-slate-900">{t.feedback.title}</h3>
+                  <p className="text-xl text-slate-600 mb-8">{t.feedback.subtitle}</p>
+                  <button onClick={() => setCurrentPage('feedback')} className="bg-green-700 hover:bg-green-800 text-white px-10 py-5 rounded-2xl font-bold text-xl transition-all shadow-xl flex items-center justify-center gap-3 group mx-auto lg:mx-0">
+                    {t.feedback.submit} <MessageCircle size={24} className="group-hover:scale-110 transition-transform" />
+                  </button>
+                </div>
+                <div className="relative z-10 hidden lg:block">
+                  <div className="w-64 h-64 bg-green-700 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl rotate-3 group">
+                    <MessageCircle size={100} className="group-hover:rotate-12 transition-transform" />
                   </div>
                 </div>
               </div>

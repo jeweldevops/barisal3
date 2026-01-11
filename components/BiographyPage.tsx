@@ -60,6 +60,7 @@ const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmi
         shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
         break;
       case 'twitter':
+      case 'x':
         shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
         break;
       case 'whatsapp':
@@ -89,8 +90,8 @@ const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmi
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             <div className="lg:col-span-5 flex justify-center lg:justify-start order-2 lg:order-1">
-              <div className="relative w-full max-w-xl mx-auto lg:mx-0">
-                <div className="aspect-[4/5] rounded-[3.5rem] overflow-hidden shadow-[0_40px_80px_-15px_rgba(0,0,0,0.15),0_20px_40px_-20px_rgba(0,0,0,0.2)] border-[18px] border-white bg-white ring-1 ring-slate-100 relative group transition-all duration-500 hover:shadow-[0_60px_100px_-20px_rgba(0,0,0,0.25)]">
+              <div className="relative w-full max-w-sm md:max-w-md mx-auto lg:mx-0">
+                <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] border-[12px] md:border-[16px] border-white bg-white ring-1 ring-slate-100 relative group transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)]">
                   <img 
                     src={portrait} 
                     alt={lang === 'en' ? profile.name_en : profile.name_bn}
@@ -111,10 +112,10 @@ const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmi
                       />
                     </div>
                   )}
-                  <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.05)] rounded-[2.5rem] pointer-events-none"></div>
+                  <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.05)] rounded-[1.8rem] md:rounded-[2rem] pointer-events-none"></div>
                 </div>
                 
-                <div className="absolute -bottom-6 -right-4 md:-right-6 bg-green-700 text-white p-6 md:p-8 rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(21,128,61,0.5)] border-4 border-white transform hover:scale-110 transition-all duration-300 z-20">
+                <div className="absolute -bottom-6 -right-4 md:-right-8 bg-green-700 text-white p-6 md:p-8 rounded-[2rem] shadow-[0_25px_50px_-12px_rgba(21,128,61,0.5)] border-4 border-white transform hover:scale-110 transition-all duration-300 z-20">
                   <div className="text-4xl md:text-5xl font-bold font-serif mb-1 leading-none">{lang === 'en' ? '35+' : '৩৫+'}</div>
                   <div className="text-xs md:text-sm uppercase tracking-widest font-black opacity-90">{t.bio.stat_years}</div>
                 </div>
@@ -139,11 +140,33 @@ const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmi
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 mb-10">
-                <div className="flex gap-2">
-                  <button onClick={() => handleShare('facebook')} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm hover:scale-110"><Facebook size={18} /></button>
-                  <button onClick={() => handleShare('twitter')} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-black hover:text-white transition-all shadow-sm hover:scale-110"><Twitter size={18} /></button>
-                  <button onClick={() => handleShare('whatsapp')} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#25D366] hover:text-white transition-all shadow-sm hover:scale-110"><MessageCircle size={18} /></button>
+              {/* Social Media Sharing Section */}
+              <div className="flex flex-col gap-4 mb-10">
+                <span className="text-sm font-black uppercase tracking-widest text-slate-400">
+                  {lang === 'en' ? 'Share Biography' : 'জীবনী শেয়ার করুন'}
+                </span>
+                <div className="flex flex-wrap gap-3">
+                  <button 
+                    onClick={() => handleShare('facebook')} 
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] transition-all shadow-sm hover:-translate-y-1 font-bold text-sm"
+                    title="Share on Facebook"
+                  >
+                    <Facebook size={18} /> Facebook
+                  </button>
+                  <button 
+                    onClick={() => handleShare('x')} 
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-black hover:text-white hover:border-black transition-all shadow-sm hover:-translate-y-1 font-bold text-sm"
+                    title="Share on X"
+                  >
+                    <Twitter size={18} /> X / Twitter
+                  </button>
+                  <button 
+                    onClick={() => handleShare('whatsapp')} 
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-all shadow-sm hover:-translate-y-1 font-bold text-sm"
+                    title="Share on WhatsApp"
+                  >
+                    <MessageCircle size={18} /> WhatsApp
+                  </button>
                 </div>
               </div>
               

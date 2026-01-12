@@ -68,7 +68,7 @@ export const initStorage = () => {
   }
   if (!localStorage.getItem(KEYS.ADMINS)) {
     localStorage.setItem(KEYS.ADMINS, JSON.stringify([
-      { username: 'admin', password: 'bnp2026', role: 'Super Admin' },
+      { username: 'admin', password: 'Bangla@1216', role: 'Super Admin' },
       { username: 'jewel', password: 'Dhaka@1216', role: 'Admin' }
     ]));
   }

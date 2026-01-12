@@ -172,13 +172,13 @@ const SupportUsPage: React.FC<SupportUsPageProps> = ({ onBack, lang }) => {
                     <label className="text-sm font-bold text-slate-700 flex items-center gap-2 ml-1">
                       <Landmark size={16} className="text-green-700"/> {t.support.form_polling}
                     </label>
-                    <input required type="text" className="form-input-custom" placeholder={lang === 'en' ? "Station Name / Number" : "ভোটকেন্দ্রের নাম/নম্বর"} value={form.pollingStation} onChange={e => setForm({...form, pollingStation: e.target.value})} />
+                    <input type="text" className="form-input-custom" placeholder={lang === 'en' ? "Station Name / Number" : "ভোটকেন্দ্রের নাম/নম্বর"} value={form.pollingStation} onChange={e => setForm({...form, pollingStation: e.target.value})} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700 flex items-center gap-2 ml-1">
                       <Gavel size={16} className="text-green-700"/> {t.support.form_role}
                     </label>
-                    <select required className="form-input-custom appearance-none cursor-pointer" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
+                    <select className="form-input-custom appearance-none cursor-pointer" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
                       <option value="">{lang === 'en' ? 'Select Preferred Role' : 'আপনার ভূমিকা নির্বাচন করুন'}</option>
                       {config.volunteer_roles.map((role: any, idx: number) => (
                         <option key={idx} value={role.title_en}>{lang === 'en' ? role.title_en : role.title_bn}</option>

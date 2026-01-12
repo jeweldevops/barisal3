@@ -9,21 +9,46 @@ import UpdatesPage from './components/UpdatesPage';
 import AIAssistantPage from './components/AIAssistantPage';
 import SupportUsPage from './components/SupportUsPage';
 import FeedbackPage from './components/FeedbackPage';
+import YouthVisionPage from './components/YouthVisionPage';
+import Vision2030Page from './components/Vision2030Page';
 import AdminDashboard from './components/AdminDashboard';
 import BnpLogo from './components/BnpLogo';
 import { initStorage, getData } from './services/storageService';
 import { TRANSLATIONS, Language, CANDIDATE_IMAGE, CANDIDATE_NAME, CANDIDATE_NAME_BN, PARTY, PARTY_BN, CONTACT_PHONE, CONTACT_EMAIL, OFFICE_ADDRESS_EN, OFFICE_ADDRESS_BN } from './constants';
-import { Calendar, ChevronRight, Mail, Phone, MapPin, Facebook, Twitter, Youtube, Instagram, ArrowRight, Sparkles, Bot, Lock, Music, X, User, Building2, Camera, MessageCircle, Lightbulb } from 'lucide-react';
+// Added missing icons: Flag, Laptop, Trophy, Cpu
+import { Calendar, ChevronRight, Mail, Phone, MapPin, Facebook, Twitter, Youtube, Instagram, ArrowRight, Sparkles, Bot, Lock, Music, X, User, Building2, Camera, MessageCircle, Lightbulb, Rocket, Zap, Laptop, Trophy, Cpu, Flag } from 'lucide-react';
 
 const SESSION_KEY = 'zainul_admin_session';
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'feedback' | 'admin'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'feedback' | 'youth' | 'vision2030' | 'admin'>('home');
   const [lang, setLang] = useState<Language>('en');
   const [currentAdmin, setCurrentAdmin] = useState<any>(null);
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser] = useState('');
   const [pass, setPass] = useState('');
+
+  // Robust default profile state
+  const [profile, setProfile] = useState<any>(() => {
+    initStorage();
+    return getData('PROFILE') || {
+      name_en: CANDIDATE_NAME,
+      name_bn: CANDIDATE_NAME_BN,
+      party_en: PARTY,
+      party_bn: PARTY_BN,
+      phone: CONTACT_PHONE,
+      email: CONTACT_EMAIL,
+      addr_en: OFFICE_ADDRESS_EN,
+      addr_bn: OFFICE_ADDRESS_BN,
+      role1_en: TRANSLATIONS.en.hero.role1,
+      role1_bn: TRANSLATIONS.bn.hero.role1,
+      role2_en: TRANSLATIONS.en.hero.role2,
+      role2_bn: TRANSLATIONS.bn.hero.role2,
+      nominee_full_en: TRANSLATIONS.en.hero.nominee_full,
+      nominee_full_bn: TRANSLATIONS.bn.hero.nominee_full,
+      image: CANDIDATE_IMAGE
+    };
+  });
 
   // Initialize data storage and check session
   useEffect(() => {
@@ -48,23 +73,6 @@ const App: React.FC = () => {
 
   const t = TRANSLATIONS[lang];
   const dynamicNews = getData('NEWS')?.[lang] || [];
-  
-  // Robust fallback to prevent null access errors on initial mount
-  const profile = getData('PROFILE') || {
-    name_en: CANDIDATE_NAME,
-    name_bn: CANDIDATE_NAME_BN,
-    party_en: PARTY,
-    party_bn: PARTY_BN,
-    phone: CONTACT_PHONE,
-    email: CONTACT_EMAIL,
-    addr_en: OFFICE_ADDRESS_EN,
-    addr_bn: OFFICE_ADDRESS_BN,
-    role1_en: TRANSLATIONS.en.hero.role1,
-    role1_bn: TRANSLATIONS.bn.hero.role1,
-    role2_en: TRANSLATIONS.en.hero.role2,
-    role2_bn: TRANSLATIONS.bn.hero.role2,
-    image: CANDIDATE_IMAGE
-  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -91,6 +99,10 @@ const App: React.FC = () => {
     setCurrentAdmin(null);
     localStorage.removeItem(SESSION_KEY);
     setCurrentPage('home');
+  };
+
+  const handleProfileUpdate = (newProfile: any) => {
+    setProfile(newProfile);
   };
 
   const renderFooter = () => (
@@ -128,6 +140,8 @@ const App: React.FC = () => {
             <h5 className="font-bold text-lg mb-6">{t.footer.links}</h5>
             <ul className="space-y-4 text-slate-400">
               <li><button onClick={() => setCurrentPage('home')} className="hover:text-red-400 transition-colors">{t.nav.home}</button></li>
+              <li><button onClick={() => setCurrentPage('vision2030')} className="hover:text-red-400 transition-colors">{t.nav.vision2030}</button></li>
+              <li><button onClick={() => setCurrentPage('youth')} className="hover:text-blue-400 transition-colors">{t.nav.youth}</button></li>
               <li><button onClick={() => setCurrentPage('vision')} className="hover:text-red-400 transition-colors">{t.nav.vision}</button></li>
               <li><button onClick={() => setCurrentPage('biography')} className="hover:text-red-400 transition-colors">{t.nav.biography}</button></li>
               <li><button onClick={() => setCurrentPage('updates')} className="hover:text-red-400 transition-colors">{t.nav.updates}</button></li>
@@ -159,7 +173,13 @@ const App: React.FC = () => {
   );
 
   if (currentPage === 'admin' && currentAdmin) return (
-    <AdminDashboard onLogout={handleLogout} lang={lang} setLang={setLang} />
+    <AdminDashboard 
+      onLogout={handleLogout} 
+      lang={lang} 
+      setLang={setLang} 
+      profile={profile}
+      onProfileUpdate={handleProfileUpdate}
+    />
   );
 
   return (
@@ -203,7 +223,13 @@ const App: React.FC = () => {
       {currentPage === 'vision' ? (
         <VisionPage onBack={() => setCurrentPage('home')} lang={lang} />
       ) : currentPage === 'biography' ? (
-        <BiographyPage onBack={() => setCurrentPage('home')} lang={lang} currentAdmin={currentAdmin} />
+        <BiographyPage 
+          onBack={() => setCurrentPage('home')} 
+          lang={lang} 
+          currentAdmin={currentAdmin} 
+          profile={profile}
+          onProfileUpdate={handleProfileUpdate}
+        />
       ) : currentPage === 'updates' ? (
         <UpdatesPage onBack={() => setCurrentPage('home')} lang={lang} />
       ) : currentPage === 'ai-assistant' ? (
@@ -212,9 +238,73 @@ const App: React.FC = () => {
         <SupportUsPage onBack={() => setCurrentPage('home')} lang={lang} />
       ) : currentPage === 'feedback' ? (
         <FeedbackPage onBack={() => setCurrentPage('home')} lang={lang} />
+      ) : currentPage === 'youth' ? (
+        <YouthVisionPage onBack={() => setCurrentPage('home')} onFeedback={() => setCurrentPage('feedback')} lang={lang} />
+      ) : currentPage === 'vision2030' ? (
+        <Vision2030Page onBack={() => setCurrentPage('home')} lang={lang} />
       ) : (
         <main>
-          <Hero onNavigate={setCurrentPage} lang={lang} />
+          <Hero onNavigate={setCurrentPage} lang={lang} profile={profile} />
+
+          {/* Vision 2030 Call-to-Action */}
+          <section className="py-24 bg-slate-900 overflow-hidden relative group">
+             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+                   <div className="flex-1 text-center md:text-left">
+                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-600/20 border border-red-500/30 text-red-400 text-sm font-black mb-6 uppercase tracking-widest">
+                        <Flag size={16}/> {lang === 'en' ? 'National Vision' : 'জাতীয় ভিশন'}
+                      </div>
+                      <h3 className="text-5xl md:text-7xl font-black mb-8 text-white font-serif italic">{t.vision2030.title_bn}</h3>
+                      <p className="text-xl text-slate-400 mb-10 leading-relaxed max-w-2xl">{t.vision2030.subtitle}</p>
+                      <button onClick={() => setCurrentPage('vision2030')} className="bg-red-600 hover:bg-red-700 text-white px-12 py-6 rounded-2xl font-black text-2xl transition-all shadow-2xl flex items-center justify-center gap-3">
+                        {lang === 'en' ? 'Explore Vision 2030' : 'ভিশন ২০৩০ দেখুন'} <ChevronRight size={32} />
+                      </button>
+                   </div>
+                   <div className="hidden lg:block w-96 h-96 relative">
+                      <div className="absolute inset-0 bg-red-600 rounded-full blur-[100px] opacity-20 animate-pulse"></div>
+                      <div className="w-full h-full border-2 border-white/10 rounded-full flex items-center justify-center relative">
+                        <Flag size={150} className="text-white opacity-20" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                           <span className="text-8xl font-black text-white/40 tracking-tighter">2030</span>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </section>
+
+          {/* Youth Vision Section */}
+          <section className="py-24 bg-white relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-1/2 h-full bg-slate-50 -z-10 skew-x-[-12deg] translate-x-1/2"></div>
+             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="bg-slate-900 rounded-[3rem] p-8 md:p-16 text-white flex flex-col lg:flex-row items-center gap-12 shadow-2xl overflow-hidden relative group">
+                   <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-green-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                   <div className="flex-1 relative z-10">
+                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-700/30 border border-blue-500/30 text-blue-400 text-xs font-black mb-6 uppercase tracking-widest">
+                        <Rocket size={14}/> {lang === 'en' ? 'New Vision' : 'নতুন ভিশন'}
+                      </div>
+                      <h3 className="text-4xl md:text-6xl font-black mb-6 font-serif italic">{t.youth.title_bn}</h3>
+                      <p className="text-xl text-slate-400 mb-8 max-w-xl">{t.youth.subtitle}</p>
+                      <button onClick={() => setCurrentPage('youth')} className="bg-white text-slate-900 px-10 py-5 rounded-2xl font-black text-xl hover:bg-blue-50 transition-all flex items-center gap-3">
+                        {lang === 'en' ? 'Explore Youth Vision' : 'তারুণ্যের ভিশন দেখুন'} <ArrowRight size={24} />
+                      </button>
+                   </div>
+                   <div className="flex-1 relative z-10 hidden lg:block">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-4">
+                           <div className="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center animate-pulse"><Laptop size={48} className="text-blue-500"/></div>
+                           <div className="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center" style={{animationDelay: '0.2s'}}><Trophy size={48} className="text-yellow-500"/></div>
+                        </div>
+                        <div className="space-y-4 pt-8">
+                           <div className="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center" style={{animationDelay: '0.4s'}}><Cpu size={48} className="text-green-500"/></div>
+                           <div className="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center animate-pulse" style={{animationDelay: '0.6s'}}><Zap size={48} className="text-purple-500"/></div>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </section>
           
           <section id="updates" className="py-24 bg-slate-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -266,7 +356,7 @@ const App: React.FC = () => {
             </div>
           </section>
 
-          {/* New Feedback/Opinion Section on Home Page */}
+          {/* Feedback/Opinion Section on Home Page */}
           <section className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="bg-slate-50 rounded-[3rem] p-8 md:p-16 border border-slate-100 flex flex-col lg:flex-row items-center justify-between gap-12 relative overflow-hidden">

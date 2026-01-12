@@ -2,16 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, CheckCircle, Award, Landmark, Gavel, ShieldCheck, Timer, Target, Users, Zap, Newspaper } from 'lucide-react';
 import { CANDIDATE_IMAGE, TRANSLATIONS, Language, ELECTION_DATE } from '../constants';
-import { getData } from '../services/storageService';
 
 interface HeroProps {
   onNavigate?: (page: 'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us') => void;
   lang: Language;
+  profile: any;
 }
 
-const Hero: React.FC<HeroProps> = ({ onNavigate, lang }) => {
+const Hero: React.FC<HeroProps> = ({ onNavigate, lang, profile }) => {
   const t = TRANSLATIONS[lang];
-  const profile = getData('PROFILE');
   
   const [timeLeft, setTimeLeft] = useState({
     days: 0, hours: 0, minutes: 0, seconds: 0

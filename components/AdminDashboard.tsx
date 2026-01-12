@@ -1,779 +1,301 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  LayoutDashboard, 
-  Newspaper, 
-  Target, 
-  UserCircle, 
-  Settings, 
-  LogOut, 
-  Plus, 
-  Trash2, 
-  Edit3, 
-  Save, 
-  X, 
-  RefreshCcw,
-  CheckCircle2,
-  Lock,
-  ChevronDown,
-  ChevronUp,
-  UserPlus,
-  ShieldCheck,
-  ShieldAlert,
-  Fingerprint,
-  Image as ImageIcon,
-  Wand2,
-  Loader2,
-  Sparkles,
-  Upload,
-  Eye,
-  Globe,
-  MessageSquare,
-  Clock,
-  MapPin,
-  User
+  LayoutDashboard, Newspaper, Target, UserCircle, Settings, LogOut, Plus, Trash2, Save, X, RefreshCcw, CheckCircle2, Lock, ShieldCheck, Upload, MessageSquare, Clock, MapPin, Flag, Rocket, Briefcase, Heart, Globe, Calendar, Edit3, Image as ImageIcon, Camera, Users
 } from 'lucide-react';
 import { getData, saveData, resetData } from '../services/storageService';
-import { generateCampaignImage, suggestImagePrompt } from '../services/geminiService';
 import { TRANSLATIONS, Language } from '../constants';
 
 interface AdminDashboardProps {
   onLogout: () => void;
   lang: Language;
   setLang: (lang: Language) => void;
+  profile: any;
+  onProfileUpdate: (newProfile: any) => void;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, lang, setLang }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'manifesto' | 'bio' | 'suggestions' | 'settings'>('overview');
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, lang, setLang, profile: globalProfile, onProfileUpdate }) => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'manifesto' | 'bio' | 'vision2030' | 'youth' | 'suggestions' | 'volunteers' | 'support' | 'settings'>('overview');
   const [news, setNews] = useState<any>(getData('NEWS'));
   const [manifesto, setManifesto] = useState<any>(getData('MANIFESTO'));
   const [bio, setBio] = useState<any>(getData('BIO'));
-  const [profile, setProfile] = useState<any>(getData('PROFILE'));
+  const [profile, setProfile] = useState<any>(globalProfile);
+  const [v2030, setV2030] = useState<any>(getData('VISION2030'));
+  const [youth, setYouth] = useState<any>(getData('YOUTH'));
+  const [support, setSupport] = useState<any>(getData('SUPPORT_CONFIG'));
   const [admins, setAdmins] = useState<any[]>(getData('ADMINS') || []);
   const [suggestions, setSuggestions] = useState<any[]>(getData('SUGGESTIONS') || []);
+  const [volunteers, setVolunteers] = useState<any[]>(getData('VOLUNTEERS') || []);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
   const t = TRANSLATIONS[lang];
 
-  // AI Image Gen State
-  const [showImageGen, setShowImageGen] = useState(false);
-  const [imageGenIdx, setImageGenIdx] = useState<number | null>(null);
-  const [genPrompt, setGenPrompt] = useState('');
-  const [isGenPromptLoading, setIsGenPromptLoading] = useState(false);
-  const [isImageLoading, setIsImageLoading] = useState(false);
-  const [genImageUrl, setGenImageUrl] = useState<string | null>(null);
-
-  // New admin state
-  const [newAdmin, setNewAdmin] = useState({ username: '', password: '', role: 'Admin' });
-  const [currentAdmin, setCurrentAdmin] = useState<any>(null);
-
   useEffect(() => {
-    const session = localStorage.getItem('zainul_admin_session');
-    if (session) {
-      setCurrentAdmin(JSON.parse(session));
-    }
-    
     if (saveStatus) {
       const timer = setTimeout(() => setSaveStatus(null), 3000);
       return () => clearTimeout(timer);
     }
   }, [saveStatus]);
 
-  const handleSave = (key: 'NEWS' | 'MANIFESTO' | 'BIO' | 'PROFILE' | 'ADMINS' | 'SUGGESTIONS', data: any) => {
+  const handleSave = (key: any, data: any) => {
     try {
       saveData(key, data);
       setSaveStatus(lang === 'en' ? 'Changes saved successfully!' : 'পরিবর্তনগুলো সফলভাবে সেভ করা হয়েছে!');
       if (key === 'NEWS') setNews(data);
       if (key === 'MANIFESTO') setManifesto(data);
       if (key === 'BIO') setBio(data);
-      if (key === 'PROFILE') setProfile(data);
+      if (key === 'PROFILE') { setProfile(data); onProfileUpdate(data); }
+      if (key === 'VISION2030') setV2030(data);
+      if (key === 'YOUTH') setYouth(data);
+      if (key === 'SUPPORT_CONFIG') setSupport(data);
       if (key === 'ADMINS') setAdmins(data);
-      if (key === 'SUGGESTIONS') setSuggestions(data);
+      if (key === 'VOLUNTEERS') setVolunteers(data);
     } catch (e) {
-      alert("Storage limit exceeded. Please use shorter text or compress images.");
+      alert("Storage limit exceeded. Try smaller text or images.");
     }
-  };
-
-  const processImageFile = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = (e) => reject(e);
-      reader.readAsDataURL(file);
-    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit for localStorage safety
-        alert("Image is too large. Please select an image under 1MB.");
-        return;
-      }
-      const base64 = await processImageFile(file);
-      callback(base64);
+      if (file.size > 1024 * 1024) { alert("Image too large (>1MB)"); return; }
+      const reader = new FileReader();
+      reader.onload = (ev) => callback(ev.target?.result as string);
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleAddAdmin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAdmin.username || !newAdmin.password) return;
-    if (admins.some(a => a.username === newAdmin.username)) {
-      alert("Username already exists.");
-      return;
-    }
-    const updated = [...admins, newAdmin];
-    handleSave('ADMINS', updated);
-    setNewAdmin({ username: '', password: '', role: 'Admin' });
+  // --- News Editor Helpers ---
+  const addNews = () => {
+    const newId = Date.now().toString();
+    const newItemEn = { id: newId, date: "New Date", title: "New Headline", excerpt: "New description...", image: "https://picsum.photos/seed/"+newId+"/800/600", category: "General" };
+    const newItemBn = { id: newId, date: "নতুন তারিখ", title: "নতুন শিরোনাম", excerpt: "নতুন বর্ণনা...", image: "https://picsum.photos/seed/"+newId+"/800/600", category: "সাধারণ" };
+    const updated = { en: [newItemEn, ...news.en], bn: [newItemBn, ...news.bn] };
+    handleSave('NEWS', updated);
   };
 
-  const removeAdmin = (username: string) => {
-    if (admins.length <= 1) {
-      alert("At least one admin account must remain.");
-      return;
-    }
-    if (username === currentAdmin?.username) {
-      alert("You cannot remove your own account while logged in.");
-      return;
-    }
-    const updated = admins.filter(a => a.username !== username);
-    handleSave('ADMINS', updated);
+  const deleteNews = (id: string) => {
+    const updated = { en: news.en.filter((n: any) => n.id !== id), bn: news.bn.filter((n: any) => n.id !== id) };
+    handleSave('NEWS', updated);
   };
 
-  const handleChangeOwnPassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newPass = (e.currentTarget.elements.namedItem('new_password') as HTMLInputElement).value;
-    if (!newPass) return;
-    
-    const updatedAdmins = admins.map(a => 
-      a.username === currentAdmin.username ? { ...a, password: newPass } : a
-    );
-    
-    handleSave('ADMINS', updatedAdmins);
-    alert("Password updated successfully.");
-    (e.target as HTMLFormElement).reset();
+  // --- Manifesto Editor Helpers ---
+  const addManifestoSector = () => {
+    const updated = {
+      en: [...manifesto.en, { title: "New Sector", description: "Desc", points: ["Point 1"] }],
+      bn: [...manifesto.bn, { title: "নতুন বিভাগ", description: "বর্ণনা", points: ["পয়েন্ট ১"] }]
+    };
+    handleSave('MANIFESTO', updated);
   };
 
-  const handleSuggestPrompt = async (idx: number) => {
-    setIsGenPromptLoading(true);
-    const item = news.en[idx];
-    const suggestion = await suggestImagePrompt(item.title, item.excerpt);
-    setGenPrompt(suggestion);
-    setIsGenPromptLoading(false);
-  };
-
-  const handleGenerateImage = async () => {
-    if (!genPrompt) return;
-    setIsImageLoading(true);
-    try {
-      const url = await generateCampaignImage(genPrompt);
-      setGenImageUrl(url);
-    } catch (err) {
-      alert("Failed to generate image. Please try again.");
-    } finally {
-      setIsImageLoading(false);
-    }
-  };
-
-  const applyGeneratedImage = () => {
-    if (imageGenIdx === null || !genImageUrl) return;
-    const nEn = [...news.en];
-    const nBn = [...news.bn];
-    nEn[imageGenIdx].image = genImageUrl;
-    nBn[imageGenIdx].image = genImageUrl;
-    setNews({ en: nEn, bn: nBn });
-    setShowImageGen(false);
-    setImageGenIdx(null);
-    setGenImageUrl(null);
-    setGenPrompt('');
-  };
-
-  const deleteSuggestion = (id: string) => {
-    const updated = suggestions.filter(s => s.id !== id);
-    handleSave('SUGGESTIONS', updated);
+  // --- Biography Timeline Helpers ---
+  const addMilestone = () => {
+    const updated = {
+      en: [...bio.en, { year: "2026", title: "New Achievement", description: "Details..." }],
+      bn: [...bio.bn, { year: "২০২৬", title: "নতুন অর্জন", description: "বিস্তারিত..." }]
+    };
+    handleSave('BIO', updated);
   };
 
   const renderOverview = () => (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-          <Newspaper className="text-green-700 mb-4" size={32} />
-          <h3 className="text-3xl font-bold">{news.en.length}</h3>
-          <p className="text-slate-500">{t.admin.news}</p>
-        </div>
-        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-          <Target className="text-red-600 mb-4" size={32} />
-          <h3 className="text-3xl font-bold">{manifesto.en.length}</h3>
-          <p className="text-slate-500">{t.admin.manifesto}</p>
-        </div>
-        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-          <MessageSquare className="text-blue-600 mb-4" size={32} />
-          <h3 className="text-3xl font-bold">{suggestions.length}</h3>
-          <p className="text-slate-500">{t.admin.suggestions}</p>
-        </div>
-        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-          <ShieldCheck className="text-purple-600 mb-4" size={32} />
-          <h3 className="text-3xl font-bold">{admins.length}</h3>
-          <p className="text-slate-500">{lang === 'en' ? 'Admin Users' : 'অ্যাডমিন ইউজার'}</p>
-        </div>
+        {[
+          { label: "News", count: news.en.length, icon: <Newspaper className="text-green-700" />, color: "bg-green-50" },
+          { label: "Manifesto", count: manifesto.en.length, icon: <Target className="text-red-600" />, color: "bg-red-50" },
+          { label: "Volunteers", count: volunteers.length, icon: <Users className="text-blue-600" />, color: "bg-blue-50" },
+          { label: "Admins", count: admins.length, icon: <ShieldCheck className="text-purple-600" />, color: "bg-purple-50" }
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-6">
+            <div className={`p-4 rounded-2xl ${stat.color}`}>{stat.icon}</div>
+            <div>
+               <div className="text-3xl font-black">{stat.count}</div>
+               <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">{stat.label}</div>
+            </div>
+          </div>
+        ))}
       </div>
       
-      <div className="bg-slate-900 text-white p-10 rounded-[3rem] shadow-xl">
+      <div className="bg-slate-900 text-white p-10 rounded-[3rem] shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-green-700/10 rounded-full blur-[80px]"></div>
         <div className="flex justify-between items-start mb-10">
           <div>
-            <h3 className="text-2xl font-bold mb-2">{t.admin.identity}</h3>
-            <p className="text-slate-400">{t.admin.identity_desc}</p>
+            <h3 className="text-3xl font-bold mb-2">Home & Identity Editor</h3>
+            <p className="text-slate-400">Manage the candidate's portrait and roles across the entire site.</p>
           </div>
           <div className="relative group cursor-pointer">
-            <div className="w-24 h-24 rounded-full border-4 border-green-700 overflow-hidden bg-slate-800">
-               <img src={profile.image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d'} className="w-full h-full object-cover" />
-               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Upload size={20} />
+            <div className="w-32 h-32 rounded-3xl border-4 border-white/10 overflow-hidden bg-slate-800 shadow-2xl">
+               <img src={profile.image} className="w-full h-full object-cover" />
+               <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera size={24} className="text-white" />
                </div>
             </div>
-            <input 
-              type="file" 
-              className="absolute inset-0 opacity-0 cursor-pointer" 
-              onChange={(e) => handleFileUpload(e, (url) => setProfile({...profile, image: url}))}
-            />
+            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, (url) => setProfile({...profile, image: url}))} />
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <h4 className="text-green-500 font-bold text-sm uppercase tracking-widest">English Identity</h4>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-bold text-slate-500">Official Name</label>
-              <input 
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 outline-none" 
-                value={profile.name_en}
-                onChange={(e) => setProfile({...profile, name_en: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-bold text-slate-500">Primary Role</label>
-              <input 
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 outline-none" 
-                value={profile.role1_en}
-                onChange={(e) => setProfile({...profile, role1_en: e.target.value})}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <h4 className="text-red-500 font-bold text-sm uppercase tracking-widest">Bengali Identity</h4>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-bold text-slate-500">অফিসিয়াল নাম</label>
-              <input 
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none" 
-                value={profile.name_bn}
-                onChange={(e) => setProfile({...profile, name_bn: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-bold text-slate-500">প্রথম ভূমিকা</label>
-              <input 
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none" 
-                value={profile.role1_bn}
-                onChange={(e) => setProfile({...profile, role1_bn: e.target.value})}
-              />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+           <div className="space-y-6 bg-white/5 p-8 rounded-3xl border border-white/5">
+             <h4 className="font-black text-green-400 uppercase text-xs tracking-widest">English Global Text</h4>
+             <div className="space-y-4">
+                <input className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 font-bold" value={profile.name_en} onChange={(e) => setProfile({...profile, name_en: e.target.value})} placeholder="Name" />
+                <input className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm" value={profile.role1_en} onChange={(e) => setProfile({...profile, role1_en: e.target.value})} placeholder="Role 1" />
+                <textarea className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm h-24" value={profile.subtitle_en} onChange={(e) => setProfile({...profile, subtitle_en: e.target.value})} placeholder="Hero Subtitle" />
+             </div>
+           </div>
+           <div className="space-y-6 bg-white/5 p-8 rounded-3xl border border-white/5">
+             <h4 className="font-black text-red-400 uppercase text-xs tracking-widest">বাংলা গ্লোবাল টেক্সট</h4>
+             <div className="space-y-4">
+                <input className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 font-bold" value={profile.name_bn} onChange={(e) => setProfile({...profile, name_bn: e.target.value})} placeholder="নাম" />
+                <input className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm" value={profile.role1_bn} onChange={(e) => setProfile({...profile, role1_bn: e.target.value})} placeholder="ভূমিকা ১" />
+                <textarea className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm h-24" value={profile.subtitle_bn} onChange={(e) => setProfile({...profile, subtitle_bn: e.target.value})} placeholder="হিরো সাবটাইটেল" />
+             </div>
+           </div>
         </div>
-        <button 
-          onClick={() => handleSave('PROFILE', profile)}
-          className="mt-10 bg-green-700 hover:bg-green-600 text-white px-10 py-4 rounded-2xl font-bold transition-all flex items-center gap-3 shadow-xl"
-        >
-          <Save size={20} /> {t.admin.save_profile}
+        <button onClick={() => handleSave('PROFILE', profile)} className="bg-green-700 hover:bg-green-600 text-white px-12 py-4 rounded-2xl font-black flex items-center gap-3 transition-all shadow-xl">
+          <Save size={24} /> Deploy Changes Application-Wide
         </button>
-      </div>
-    </div>
-  );
-
-  const renderSuggestions = () => (
-    <div className="space-y-8">
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-          <h3 className="text-xl font-bold">{t.admin.suggestions}</h3>
-          <span className="bg-slate-900 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">{suggestions.length} {lang === 'en' ? 'Total' : 'মোট'}</span>
-        </div>
-        
-        {suggestions.length === 0 ? (
-          <div className="p-20 text-center">
-            <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <MessageSquare className="text-slate-300" size={32} />
-            </div>
-            <p className="text-slate-500 font-medium">{lang === 'en' ? 'No suggestions submitted yet.' : 'এখনও কোন প্রস্তাবনা জমা পড়েনি।'}</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {suggestions.map((s) => (
-              <div key={s.id} className="p-8 hover:bg-slate-50 transition-colors">
-                <div className="flex flex-col lg:flex-row gap-8">
-                  <div className="flex-1 space-y-4">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-100">
-                        <User size={14} /> {s.fullName}
-                      </div>
-                      <div className="flex items-center gap-2 bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold border border-slate-200">
-                        <MapPin size={14} /> {s.thana}, {s.union}
-                      </div>
-                      <div className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-100">
-                        <Clock size={14} /> {new Date(s.timestamp).toLocaleString()}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">{lang === 'en' ? 'Category:' : 'বিভাগ:'} {s.category}</h4>
-                      <div className="p-6 bg-white border border-slate-100 rounded-3xl text-slate-800 leading-relaxed shadow-sm">
-                        {s.suggestion}
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-                       <div>
-                         <div className="text-[9px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Phone' : 'ফোন'}</div>
-                         <div className="text-sm font-bold text-slate-700">{s.phone}</div>
-                       </div>
-                       <div>
-                         <div className="text-[9px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Email' : 'ইমেইল'}</div>
-                         <div className="text-sm font-bold text-slate-700">{s.email}</div>
-                       </div>
-                       <div>
-                         <div className="text-[9px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Profession' : 'পেশা'}</div>
-                         <div className="text-sm font-bold text-slate-700">{s.profession}</div>
-                       </div>
-                       <div>
-                         <div className="text-[9px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Village' : 'গ্রাম'}</div>
-                         <div className="text-sm font-bold text-slate-700">{s.village}</div>
-                       </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex lg:flex-col justify-end gap-3">
-                    <button 
-                      onClick={() => deleteSuggestion(s.id)}
-                      className="p-4 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-sm group"
-                      title="Delete Suggestion"
-                    >
-                      <Trash2 size={24} className="group-active:scale-90 transition-transform" />
-                    </button>
-                    <a 
-                      href={`mailto:${s.email}`}
-                      className="p-4 bg-green-50 text-green-700 rounded-2xl hover:bg-green-700 hover:text-white transition-all shadow-sm group"
-                      title="Reply via Email"
-                    >
-                      <Save size={24} className="group-active:scale-90 transition-transform" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderSettings = () => (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm flex flex-col h-full">
-          <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
-            <UserPlus className="text-green-700" /> {lang === 'en' ? 'Create New Admin User' : 'নতুন অ্যাডমিন ইউজার তৈরি করুন'}
-          </h3>
-          <form onSubmit={handleAddAdmin} className="space-y-6 flex-1">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase">Username</label>
-              <input 
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-700"
-                value={newAdmin.username}
-                onChange={e => setNewAdmin({...newAdmin, username: e.target.value})}
-                placeholder="e.g. campaigner_1"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase">Password</label>
-              <input 
-                type="password"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-700"
-                value={newAdmin.password}
-                onChange={e => setNewAdmin({...newAdmin, password: e.target.value})}
-                placeholder="••••••••"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase">Role</label>
-              <select 
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-700 bg-white"
-                value={newAdmin.role}
-                onChange={e => setNewAdmin({...newAdmin, role: e.target.value})}
-              >
-                <option value="Admin">Admin</option>
-                <option value="Editor">Editor</option>
-                <option value="Viewer">Viewer</option>
-              </select>
-            </div>
-            <button className="w-full bg-green-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-800 transition-all shadow-md">
-              <Plus size={20} /> Add User
-            </button>
-          </form>
-        </div>
-
-        <div className="bg-slate-900 text-white rounded-[2.5rem] p-10 shadow-xl flex flex-col h-full">
-          <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
-            <Fingerprint className="text-green-500" /> {lang === 'en' ? 'Security Settings' : 'নিরাপত্তা সেটিংস'}
-          </h3>
-          <div className="flex-1 space-y-8">
-            <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
-              <p className="text-sm text-slate-400 mb-1">{lang === 'en' ? 'Logged in as:' : 'লগ-ইন আছেন:'}</p>
-              <h4 className="text-xl font-bold text-white">{currentAdmin?.username}</h4>
-              <span className="inline-block mt-2 px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest">{currentAdmin?.role}</span>
-            </div>
-            
-            <form onSubmit={handleChangeOwnPassword} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase">{lang === 'en' ? 'Change My Password' : 'পাসওয়ার্ড পরিবর্তন করুন'}</label>
-                <input 
-                  name="new_password"
-                  type="password"
-                  className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Enter new password"
-                />
-              </div>
-              <button className="w-full bg-green-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-500 transition-all">
-                <Save size={20} /> {lang === 'en' ? 'Update My Password' : 'পাসওয়ার্ড আপডেট করুন'}
-              </button>
-            </form>
-          </div>
-        </div>
       </div>
     </div>
   );
 
   const renderNewsManager = () => (
-    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-      <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-        <h3 className="text-xl font-bold">{t.admin.news}</h3>
-        <button 
-          onClick={() => {
-            const newId = Date.now().toString();
-            const newItemEn = { id: newId, date: 'Oct 30, 2023', title: 'New Campaign Update', excerpt: 'Brief description of the event...', image: 'https://picsum.photos/seed/'+newId+'/800/600', category: 'Community' };
-            const newItemBn = { id: newId, date: '৩০ অক্টোবর, ২০২৩', title: 'নতুন নির্বাচনী আপডেট', excerpt: 'ইভেন্টের সংক্ষিপ্ত বর্ণনা...', image: 'https://picsum.photos/seed/'+newId+'/800/600', category: 'সামাজিক' };
-            setNews({ en: [newItemEn, ...news.en], bn: [newItemBn, ...news.bn] });
-          }}
-          className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800 transition-all"
-        >
-          <Plus size={18} /> {lang === 'en' ? 'New Entry' : 'নতুন এন্ট্রি'}
-        </button>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-2xl font-black">Campaign Updates Engine</h3>
+        <button onClick={addNews} className="bg-green-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg hover:bg-green-800 transition-all"><Plus size={20}/> Add New Update</button>
       </div>
-      <div className="divide-y divide-slate-100">
-        {news.en.map((item: any, idx: number) => (
-          <div key={item.id} className="p-8 hover:bg-slate-50 transition-colors">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              <div className="lg:col-span-2 space-y-4">
-                 <div className="relative group w-full aspect-square bg-slate-100 rounded-3xl overflow-hidden border border-slate-200">
-                    <img src={item.image} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                       <Upload className="text-white" size={24} />
-                       <span className="text-[10px] text-white font-bold uppercase">Upload</span>
-                    </div>
-                    <input 
-                      type="file" 
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      onChange={(e) => handleFileUpload(e, (url) => {
-                        const nEn = [...news.en]; const nBn = [...news.bn];
-                        nEn[idx].image = url; nBn[idx].image = url;
-                        setNews({en: nEn, bn: nBn});
-                      })}
-                    />
-                 </div>
-                 <button 
-                  onClick={() => { setImageGenIdx(idx); setShowImageGen(true); }}
-                  className="w-full bg-green-50 text-green-700 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-green-100 hover:bg-green-100 transition-all"
-                 >
-                   <Wand2 className="inline mr-1" size={12} /> AI Tool
-                 </button>
-              </div>
-              <div className="lg:col-span-5 space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 bg-slate-100 rounded flex items-center justify-center text-[10px] font-bold">EN</div>
-                  <span className="text-xs font-black uppercase tracking-widest text-slate-400">English Content</span>
-                </div>
-                <input 
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-green-700 outline-none" 
-                  placeholder="Article Title"
-                  value={item.title} 
-                  onChange={(e) => {
-                    const newEn = [...news.en];
-                    newEn[idx].title = e.target.value;
-                    setNews({ ...news, en: newEn });
-                  }}
-                />
-                <textarea 
-                   className="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs min-h-[100px] focus:ring-2 focus:ring-green-700 outline-none" 
-                   placeholder="Short summary..."
-                   value={item.excerpt}
-                   onChange={(e) => {
-                    const newEn = [...news.en];
-                    newEn[idx].excerpt = e.target.value;
-                    setNews({ ...news, en: newEn });
-                  }}
-                />
-              </div>
-              <div className="lg:col-span-5 space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 bg-red-50 rounded flex items-center justify-center text-[10px] font-bold text-red-600">BN</div>
-                  <span className="text-xs font-black uppercase tracking-widest text-slate-400">বাংলা কন্টেন্ট</span>
-                </div>
-                <input 
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-red-600 outline-none" 
-                  placeholder="নিবন্ধের শিরোনাম"
-                  value={news.bn[idx].title} 
-                  onChange={(e) => {
-                    const newBn = [...news.bn];
-                    newBn[idx].title = e.target.value;
-                    setNews({ ...news, bn: newBn });
-                  }}
-                />
-                <textarea 
-                   className="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs min-h-[100px] focus:ring-2 focus:ring-red-600 outline-none" 
-                   placeholder="সংক্ষিপ্ত সারসংক্ষেপ..."
-                   value={news.bn[idx].excerpt}
-                   onChange={(e) => {
-                    const newBn = [...news.bn];
-                    newBn[idx].excerpt = e.target.value;
-                    setNews({ ...news, bn: newBn });
-                  }}
-                />
-              </div>
+      <div className="grid grid-cols-1 gap-6">
+        {news.en.map((n: any, i: number) => (
+          <div key={n.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-6">
+            <div className="w-full md:w-48 aspect-video md:aspect-square bg-slate-100 rounded-2xl overflow-hidden relative group">
+               <img src={n.image} className="w-full h-full object-cover" />
+               <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, (url) => {
+                 const u = {...news}; u.en[i].image = url; u.bn[i].image = url; setNews(u); handleSave('NEWS', u);
+               })} />
             </div>
-            <div className="mt-8 flex flex-wrap justify-between items-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100 gap-4">
-              <div className="flex items-center gap-4 flex-1 min-w-[300px]">
-                <div className="text-xs text-slate-400 font-medium whitespace-nowrap">Image URL:</div>
-                <input 
-                  className="bg-transparent border-b border-slate-200 outline-none flex-1 text-xs font-mono" 
-                  value={item.image.length > 50 ? item.image.substring(0, 50) + '...' : item.image} 
-                  onChange={(e) => {
-                    const nEn = [...news.en]; const nBn = [...news.bn];
-                    nEn[idx].image = e.target.value; nBn[idx].image = e.target.value;
-                    setNews({en: nEn, bn: nBn});
-                  }} 
-                />
-              </div>
-              <button 
-                onClick={() => {
-                  const newEn = news.en.filter((_: any, i: number) => i !== idx);
-                  const newBn = news.bn.filter((_: any, i: number) => i !== idx);
-                  setNews({ en: newEn, bn: newBn });
-                }}
-                className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors flex items-center gap-2 ml-auto"
-              >
-                <Trash2 size={14} /> {lang === 'en' ? 'Delete Update' : 'মুছে ফেলুন'}
-              </button>
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="space-y-3">
+                 <input className="w-full bg-slate-50 rounded-xl px-4 py-2 font-bold" value={n.title} onChange={(e) => { const u = {...news}; u.en[i].title = e.target.value; setNews(u); }} />
+                 <textarea className="w-full bg-slate-50 rounded-xl px-4 py-2 text-xs h-20" value={n.excerpt} onChange={(e) => { const u = {...news}; u.en[i].excerpt = e.target.value; setNews(u); }} />
+               </div>
+               <div className="space-y-3">
+                 <input className="w-full bg-slate-50 rounded-xl px-4 py-2 font-bold" value={news.bn[i].title} onChange={(e) => { const u = {...news}; u.bn[i].title = e.target.value; setNews(u); }} />
+                 <textarea className="w-full bg-slate-50 rounded-xl px-4 py-2 text-xs h-20" value={news.bn[i].excerpt} onChange={(e) => { const u = {...news}; u.bn[i].excerpt = e.target.value; setNews(u); }} />
+               </div>
+            </div>
+            <div className="flex flex-col gap-2">
+               <button onClick={() => handleSave('NEWS', news)} className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"><Save size={20}/></button>
+               <button onClick={() => deleteNews(n.id)} className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"><Trash2 size={20}/></button>
             </div>
           </div>
         ))}
-      </div>
-      <div className="p-10 bg-slate-50 border-t border-slate-100 flex justify-end">
-        <button 
-          onClick={() => handleSave('NEWS', news)}
-          className="bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-lg transition-all"
-        >
-          <Save size={20} /> {t.admin.save_news}
-        </button>
-      </div>
-
-      {showImageGen && (
-        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[200] flex items-center justify-center p-6">
-          <div className="bg-white rounded-[3rem] p-8 md:p-12 max-w-4xl w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
-            <button onClick={() => { setShowImageGen(false); setImageGenIdx(null); setGenImageUrl(null); }} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900"><X size={32}/></button>
-            <div className="flex items-center gap-4 mb-8">
-              <div className="bg-green-700 p-3 rounded-2xl text-white shadow-lg"><Wand2 size={24} /></div>
-              <div>
-                <h3 className="text-3xl font-bold">AI Image Generator</h3>
-                <p className="text-slate-500 font-medium">Create custom visual content for your update.</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 overflow-y-auto pr-2">
-              <div className="space-y-6">
-                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                  <div className="flex justify-between items-center mb-4">
-                    <label className="text-sm font-black uppercase text-slate-400 tracking-widest">Image Prompt</label>
-                    <button onClick={() => handleSuggestPrompt(imageGenIdx!)} disabled={isGenPromptLoading} className="text-xs font-bold text-green-700 hover:text-green-800 flex items-center gap-1.5 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                      {isGenPromptLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} 
-                      Suggest Prompt
-                    </button>
-                  </div>
-                  <textarea className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm h-32 focus:ring-2 focus:ring-green-700 outline-none resize-none shadow-inner" value={genPrompt} onChange={(e) => setGenPrompt(e.target.value)} placeholder="Describe the image you want to generate..." />
-                  <button onClick={handleGenerateImage} disabled={!genPrompt || isImageLoading} className="w-full mt-6 bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                    {isImageLoading ? <Loader2 size={20} className="animate-spin" /> : <Wand2 size={20} />} 
-                    Generate Campaign Visual
-                  </button>
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <label className="text-sm font-black uppercase text-slate-400 tracking-widest mb-4">Preview & Application</label>
-                <div className="flex-1 bg-slate-100 rounded-[2rem] border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden min-h-[250px] relative shadow-inner">
-                  {isImageLoading ? (
-                    <div className="flex flex-col items-center gap-4">
-                      <Loader2 size={48} className="animate-spin text-green-700" />
-                      <p className="text-slate-500 font-bold animate-pulse text-sm">Crafting your visual...</p>
-                    </div>
-                  ) : genImageUrl ? (
-                    <img src={genImageUrl} alt="Generated" className="w-full h-full object-cover animate-fade-in" />
-                  ) : (
-                    <div className="text-center p-8">
-                      <ImageIcon size={48} className="mx-auto text-slate-300 mb-4" />
-                      <p className="text-slate-400 font-medium">Your generated image will appear here.</p>
-                    </div>
-                  )}
-                </div>
-                <button onClick={applyGeneratedImage} disabled={!genImageUrl} className="w-full mt-6 bg-green-700 hover:bg-green-800 text-white font-bold py-5 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-20 disabled:grayscale">
-                  <CheckCircle2 size={24} /> Use This Image
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderBioManager = () => (
-    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-      <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-        <h3 className="text-xl font-bold">{t.admin.bio}</h3>
-        <button 
-          onClick={() => {
-            const newItemEn = { year: 'Year', title: 'Milestone Title', description: 'Description...', image: '' };
-            const newItemBn = { year: 'বছর', title: 'মাইলফলক শিরোনাম', description: 'বর্ণনা...', image: '' };
-            setBio({ en: [...bio.en, newItemEn], bn: [...bio.bn, newItemBn] });
-          }}
-          className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
-        >
-          <Plus size={16} /> {lang === 'en' ? 'Add Milestone' : 'মাইলফলক যোগ করুন'}
-        </button>
-      </div>
-      <div className="p-8 space-y-8">
-        {bio.en.map((item: any, idx: number) => (
-          <div key={idx} className="bg-slate-50 p-6 rounded-3xl border border-slate-100 relative group">
-            <button onClick={() => { const newEn = bio.en.filter((_: any, i: number) => i !== idx); const newBn = bio.bn.filter((_: any, i: number) => i !== idx); setBio({ en: newEn, bn: newBn }); }} className="absolute -top-3 -right-3 w-8 h-8 bg-white text-red-600 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 hover:text-white transition-all opacity-0 group-hover:opacity-100 z-10">
-              <X size={16} />
-            </button>
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-              <div className="md:col-span-2 space-y-3">
-                 <div className="relative group aspect-square rounded-2xl overflow-hidden bg-white border border-slate-200">
-                    {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-slate-300"><ImageIcon size={32}/></div>}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                       <Upload className="text-white" size={20}/>
-                    </div>
-                    <input 
-                      type="file" 
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      onChange={(e) => handleFileUpload(e, (url) => {
-                        const nEn = [...bio.en]; const nBn = [...bio.bn];
-                        nEn[idx].image = url; nBn[idx].image = url;
-                        setBio({en: nEn, bn: nBn});
-                      })}
-                    />
-                 </div>
-                 <div className="text-[9px] text-center font-bold text-slate-400 uppercase">Milestone Image</div>
-              </div>
-              <div className="md:col-span-5 space-y-4">
-                <input className="w-32 bg-white border border-slate-200 rounded-lg px-3 py-1 font-bold text-green-700" value={item.year} onChange={(e) => { const n = [...bio.en]; n[idx].year = e.target.value; setBio({...bio, en: n}); }} />
-                <input className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold" value={item.title} onChange={(e) => { const n = [...bio.en]; n[idx].title = e.target.value; setBio({...bio, en: n}); }} />
-                <textarea className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm h-20" value={item.description} onChange={(e) => { const n = [...bio.en]; n[idx].description = e.target.value; setBio({...bio, en: n}); }} />
-              </div>
-              <div className="md:col-span-5 space-y-4">
-                <input className="w-32 bg-white border border-slate-200 rounded-lg px-3 py-1 font-bold text-red-600" value={bio.bn[idx].year} onChange={(e) => { const n = [...bio.bn]; n[idx].year = e.target.value; setBio({...bio, bn: n}); }} />
-                <input className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold" value={bio.bn[idx].title} onChange={(e) => { const n = [...bio.bn]; n[idx].title = e.target.value; setBio({...bio, bn: n}); }} />
-                <textarea className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm h-20" value={bio.bn[idx].description} onChange={(e) => { const n = [...bio.bn]; n[idx].description = e.target.value; setBio({...bio, bn: n}); }} />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
-        <button onClick={() => handleSave('BIO', bio)} className="bg-green-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2">
-          <Save size={18} /> {t.admin.save_bio}
-        </button>
       </div>
     </div>
   );
 
   const renderManifestoManager = () => (
-    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-      <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-        <h3 className="text-xl font-bold">{t.admin.manifesto}</h3>
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h3 className="text-2xl font-black">2026 Manifesto structured Editor</h3>
+        <button onClick={addManifestoSector} className="bg-red-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2"><Plus size={20}/> Add Sector</button>
       </div>
-      <div className="p-8 space-y-12">
-        {manifesto.en.map((sector: any, idx: number) => (
-          <div key={idx} className="p-8 border-2 border-slate-100 rounded-[2.5rem] space-y-6">
-            <div className="flex justify-between items-center">
-              <h4 className="text-lg font-black text-slate-900 border-b-2 border-red-500 w-fit pb-1">Sector {idx + 1}</h4>
-              <div className="flex items-center gap-4">
-                 <div className="relative group w-32 h-20 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
-                    {sector.image ? <img src={sector.image} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-slate-300"><ImageIcon size={20}/></div>}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                       <Upload className="text-white" size={16}/>
-                    </div>
-                    <input 
-                      type="file" 
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      onChange={(e) => handleFileUpload(e, (url) => {
-                        const nEn = [...manifesto.en]; const nBn = [...manifesto.bn];
-                        nEn[idx].image = url; nBn[idx].image = url;
-                        setManifesto({en: nEn, bn: nBn});
-                      })}
-                    />
-                 </div>
-                 <span className="text-[10px] font-black uppercase text-slate-400">Sector Visual</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase text-slate-400">English Details</p>
-                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold" value={sector.title} onChange={(e) => { const n = [...manifesto.en]; n[idx].title = e.target.value; setManifesto({...manifesto, en: n}); }} />
-                <textarea className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm h-24" value={sector.description} onChange={(e) => { const n = [...manifesto.en]; n[idx].description = e.target.value; setManifesto({...manifesto, en: n}); }} />
+      {manifesto.en.map((sec: any, i: number) => (
+        <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+           <div className="grid grid-cols-2 gap-8">
+             <div className="space-y-3">
+               <input className="w-full text-xl font-bold border-b border-slate-100 py-2 outline-none focus:border-red-600" value={sec.title} onChange={(e) => { const u = {...manifesto}; u.en[i].title = e.target.value; setManifesto(u); }} />
+               <textarea className="w-full text-sm text-slate-500 bg-slate-50 p-4 rounded-2xl h-24" value={sec.description} onChange={(e) => { const u = {...manifesto}; u.en[i].description = e.target.value; setManifesto(u); }} />
+             </div>
+             <div className="space-y-3">
+               <input className="w-full text-xl font-bold border-b border-slate-100 py-2 outline-none focus:border-red-600" value={manifesto.bn[i].title} onChange={(e) => { const u = {...manifesto}; u.bn[i].title = e.target.value; setManifesto(u); }} />
+               <textarea className="w-full text-sm text-slate-500 bg-slate-50 p-4 rounded-2xl h-24" value={manifesto.bn[i].description} onChange={(e) => { const u = {...manifesto}; u.bn[i].description = e.target.value; setManifesto(u); }} />
+             </div>
+           </div>
+           <div className="pt-4 border-t border-slate-50 flex justify-end gap-3">
+             <button onClick={() => {
+                const u = {...manifesto}; u.en.splice(i, 1); u.bn.splice(i, 1); setManifesto(u); handleSave('MANIFESTO', u);
+             }} className="text-red-600 font-bold text-sm px-4 py-2 bg-red-50 rounded-xl">Delete Sector</button>
+             <button onClick={() => handleSave('MANIFESTO', manifesto)} className="bg-red-600 text-white px-8 py-2 rounded-xl font-bold">Save Sector</button>
+           </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderBioTimeline = () => (
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h3 className="text-2xl font-black">Biography Timeline Manager</h3>
+        <button onClick={addMilestone} className="bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2"><Plus size={20}/> Add Event</button>
+      </div>
+      <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm space-y-6">
+        {bio.en.map((m: any, i: number) => (
+          <div key={i} className="flex gap-6 items-start p-6 bg-slate-50 rounded-3xl border border-slate-100 group">
+             <div className="w-24">
+                <input className="w-full font-black text-center text-blue-700 bg-white border border-slate-200 rounded-xl py-2" value={m.year} onChange={(e) => { const u = {...bio}; u.en[i].year = e.target.value; u.bn[i].year = e.target.value; setBio(u); }} />
+             </div>
+             <div className="flex-1 grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-slate-400">Bullet Points</p>
-                  {sector.points.map((p: string, pIdx: number) => (
-                    <input key={pIdx} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs" value={p} onChange={(e) => { const n = [...manifesto.en]; n[idx].points[pIdx] = e.target.value; setManifesto({...manifesto, en: n}); }} />
-                  ))}
+                   <input className="w-full font-bold bg-white border-none px-2 py-1 text-sm" value={m.title} onChange={(e) => { const u = {...bio}; u.en[i].title = e.target.value; setBio(u); }} />
+                   <textarea className="w-full text-xs bg-white border-none px-2 py-1 h-16" value={m.description} onChange={(e) => { const u = {...bio}; u.en[i].description = e.target.value; setBio(u); }} />
                 </div>
-              </div>
-              <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase text-slate-400">বাংলা বিবরণ</p>
-                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold" value={manifesto.bn[idx].title} onChange={(e) => { const n = [...manifesto.bn]; n[idx].title = e.target.value; setManifesto({...manifesto, bn: n}); }} />
-                <textarea className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm h-24" value={manifesto.bn[idx].description} onChange={(e) => { const n = [...manifesto.bn]; n[idx].description = e.target.value; setManifesto({...manifesto, bn: n}); }} />
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-slate-400">পয়েন্ট সমূহ</p>
-                  {manifesto.bn[idx].points.map((p: string, pIdx: number) => (
-                    <input key={pIdx} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs" value={p} onChange={(e) => { const n = [...manifesto.bn]; n[idx].points[pIdx] = e.target.value; setManifesto({...manifesto, bn: n}); }} />
-                  ))}
+                   <input className="w-full font-bold bg-white border-none px-2 py-1 text-sm" value={bio.bn[i].title} onChange={(e) => { const u = {...bio}; u.bn[i].title = e.target.value; setBio(u); }} />
+                   <textarea className="w-full text-xs bg-white border-none px-2 py-1 h-16" value={bio.bn[i].description} onChange={(e) => { const u = {...bio}; u.bn[i].description = e.target.value; setBio(u); }} />
                 </div>
-              </div>
-            </div>
+             </div>
+             <button onClick={() => {
+                const u = {...bio}; u.en.splice(i, 1); u.bn.splice(i, 1); setBio(u); handleSave('BIO', u);
+             }} className="p-3 bg-red-50 text-red-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={18}/></button>
           </div>
         ))}
+        <div className="flex justify-end pt-6">
+          <button onClick={() => handleSave('BIO', bio)} className="bg-blue-700 text-white px-10 py-4 rounded-2xl font-black shadow-lg">Save Biography Updates</button>
+        </div>
       </div>
-      <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
-        <button onClick={() => handleSave('MANIFESTO', manifesto)} className="bg-green-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2">
-          <Save size={18} /> {t.admin.save_manifesto}
-        </button>
-      </div>
+    </div>
+  );
+
+  const renderSupportManager = () => (
+    <div className="space-y-8">
+       <h3 className="text-2xl font-black">Support Page & Financials</h3>
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+             <h4 className="font-bold text-red-600 flex items-center gap-2"><Briefcase size={20}/> Donation Details</h4>
+             <div className="space-y-4">
+                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold" value={support.bank_account} onChange={(e) => setSupport({...support, bank_account: e.target.value})} placeholder="Bank Title" />
+                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-mono" value={support.bank_number} onChange={(e) => setSupport({...support, bank_number: e.target.value})} placeholder="Account Details" />
+             </div>
+          </div>
+          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+             <h4 className="font-bold text-green-700 flex items-center gap-2"><Rocket size={20}/> Volunteer Roles</h4>
+             {support.volunteer_roles.map((role: any, i: number) => (
+                <div key={i} className="flex gap-4">
+                   <input className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs" value={role.title_en} onChange={(e) => { const u = {...support}; u.volunteer_roles[i].title_en = e.target.value; setSupport(u); }} />
+                   <input className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs" value={role.title_bn} onChange={(e) => { const u = {...support}; u.volunteer_roles[i].title_bn = e.target.value; setSupport(u); }} />
+                </div>
+             ))}
+          </div>
+       </div>
+       <div className="flex justify-center">
+          <button onClick={() => handleSave('SUPPORT_CONFIG', support)} className="bg-slate-900 text-white px-12 py-4 rounded-2xl font-black shadow-xl">Update Support Page Settings</button>
+       </div>
     </div>
   );
 
   const getActiveTabTitle = () => {
     switch (activeTab) {
-      case 'overview': return t.admin.overview;
-      case 'news': return t.admin.news;
-      case 'manifesto': return t.admin.manifesto;
-      case 'bio': return t.admin.bio;
-      case 'suggestions': return t.admin.suggestions;
-      case 'settings': return t.admin.settings;
+      case 'overview': return "Dashboard Overview";
+      case 'news': return "Campaign Chronicle News";
+      case 'manifesto': return "Development Manifesto";
+      case 'bio': return "Biography & Career";
+      case 'vision2030': return "Vision 2030 Roadmap";
+      case 'youth': return "Youth Vision Settings";
+      case 'suggestions': return "Voter Opinions";
+      case 'volunteers': return "Campaign Volunteers";
+      case 'support': return "Support Us Settings";
+      case 'settings': return "Admin Access Control";
       default: return "";
     }
   };
@@ -781,102 +303,169 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, lang, setLang
   return (
     <div className="min-h-screen bg-slate-100 flex">
       <div className="w-72 bg-slate-900 text-white p-8 flex flex-col fixed h-full shadow-2xl z-50">
-        <div className="flex items-center gap-3 mb-12">
+        <div className="flex items-center gap-3 mb-10">
           <div className="bg-green-700 p-2.5 rounded-2xl shadow-lg ring-4 ring-green-900/30"><Settings size={28} /></div>
           <div className="flex flex-col">
-             <span className="font-black text-xl tracking-tighter leading-none">{t.admin.hub}</span>
-             <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mt-1">{t.admin.center}</span>
+             <span className="font-black text-xl tracking-tighter leading-none">CMS HUB</span>
+             <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mt-1">Zainul Campaign</span>
           </div>
         </div>
-        <nav className="space-y-3 flex-1">
-          <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'overview' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <LayoutDashboard size={20} /> {t.admin.overview}
-          </button>
-          <button onClick={() => setActiveTab('news')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'news' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <Newspaper size={20} /> {t.admin.news}
-          </button>
-          <button onClick={() => setActiveTab('manifesto')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'manifesto' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <Target size={20} /> {t.admin.manifesto}
-          </button>
-          <button onClick={() => setActiveTab('bio')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'bio' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <UserCircle size={20} /> {t.admin.bio}
-          </button>
-          <button onClick={() => setActiveTab('suggestions')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'suggestions' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <MessageSquare size={20} /> {t.admin.suggestions}
-          </button>
-          <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === 'settings' ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <Lock size={20} /> {t.admin.settings}
-          </button>
+        <nav className="space-y-2 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
+          {[
+            { id: 'overview', label: "Overview", icon: <LayoutDashboard size={18}/> },
+            { id: 'news', label: "Updates/News", icon: <Newspaper size={18}/> },
+            { id: 'vision2030', label: "Vision 2030", icon: <Flag size={18}/>, color: "text-red-400" },
+            { id: 'youth', label: "Youth Vision", icon: <Rocket size={18}/>, color: "text-blue-400" },
+            { id: 'manifesto', label: "Manifesto", icon: <Target size={18}/> },
+            { id: 'bio', label: "Biography", icon: <UserCircle size={18}/> },
+            { id: 'support', label: "Support Config", icon: <Heart size={18}/> },
+            { id: 'volunteers', label: "Volunteers", icon: <Users size={18}/> },
+            { id: 'suggestions', label: "Opinions", icon: <MessageSquare size={18}/> },
+            { id: 'settings', label: "Access", icon: <Lock size={18}/> },
+          ].map((item) => (
+            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${activeTab === item.id ? 'bg-green-700 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+              <span className={activeTab === item.id ? '' : item.color}>{item.icon}</span> {item.label}
+            </button>
+          ))}
         </nav>
         <div className="pt-8 border-t border-white/10 space-y-4">
-          <div className="px-5 py-4 bg-white/5 rounded-2xl flex items-center gap-3">
-             <div className="w-8 h-8 rounded-full bg-green-700 flex items-center justify-center text-[10px] font-bold">{currentAdmin?.username?.charAt(0).toUpperCase()}</div>
-             <div className="flex flex-col">
-                <span className="text-xs font-bold">{currentAdmin?.username}</span>
-                <span className="text-[10px] text-slate-500">{currentAdmin?.role}</span>
-             </div>
-          </div>
           <button onClick={resetData} className="w-full flex items-center gap-3 px-5 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-all text-xs font-black uppercase tracking-widest">
-            <RefreshCcw size={16} /> {t.admin.reset}
+            <RefreshCcw size={16} /> Factory Reset
           </button>
           <button onClick={onLogout} className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-white bg-white/5 hover:bg-white/10 transition-all text-sm font-bold shadow-sm">
-            <LogOut size={18} /> {t.admin.exit}
+            <LogOut size={18} /> Sign Out
           </button>
         </div>
       </div>
       <div className="ml-72 flex-1 p-12 min-h-screen">
-        <header className="flex justify-between items-center mb-12 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <header className="flex justify-between items-center mb-12 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 capitalize tracking-tight">{getActiveTabTitle()} {t.admin.manager}</h1>
-            <p className="text-slate-500 font-medium mt-1">Official Campaign Management System for Advocate Zainul Abedin.</p>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight">{getActiveTabTitle()}</h1>
           </div>
           <div className="flex items-center gap-6">
-            {/* Language Toggle */}
-            <div className="flex flex-col items-end gap-2">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t.admin.lang_preference}</span>
-              <div className="flex items-center bg-slate-100 rounded-full p-1.5 border border-slate-200">
-                <button 
-                  onClick={() => setLang('en')}
-                  className={`px-4 py-2 text-xs font-bold rounded-full transition-all flex items-center gap-2 ${lang === 'en' ? 'bg-white text-green-700 shadow-md ring-1 ring-green-100' : 'text-slate-400'}`}
-                >
-                  <Globe size={12} /> EN
-                </button>
-                <button 
-                  onClick={() => setLang('bn')}
-                  className={`px-4 py-2 text-xs font-bold rounded-full transition-all flex items-center gap-2 ${lang === 'bn' ? 'bg-white text-green-700 shadow-md ring-1 ring-green-100' : 'text-slate-400'}`}
-                >
-                  <Globe size={12} /> বাংলা
-                </button>
-              </div>
-            </div>
-
-            <div className="h-10 w-px bg-slate-200"></div>
-
-            <div className="flex items-center gap-4">
-              {saveStatus && (
-                <div className="bg-green-700 text-white px-8 py-4 rounded-[2rem] flex items-center gap-3 animate-fade-in shadow-2xl border border-green-600 ring-4 ring-green-100">
-                  <CheckCircle2 size={24} /> 
-                  <span className="font-bold">{saveStatus}</span>
+            {saveStatus && (
+                <div className="bg-green-700 text-white px-8 py-4 rounded-[2rem] flex items-center gap-3 animate-fade-in shadow-xl border border-green-600 ring-4 ring-green-50">
+                  <CheckCircle2 size={24} /> <span className="font-bold">{saveStatus}</span>
                 </div>
               )}
-              <button 
-                onClick={onLogout}
-                className="bg-slate-900 text-white p-4 rounded-2xl hover:bg-slate-800 transition-all shadow-lg flex items-center gap-2 font-bold"
-                title="Logout"
-              >
-                <LogOut size={20} />
-                <span className="hidden sm:inline">{t.admin.exit}</span>
-              </button>
+            <div className="flex items-center bg-slate-100 rounded-full p-1.5 border border-slate-200 shadow-inner">
+                <button onClick={() => setLang('en')} className={`px-5 py-2 text-xs font-bold rounded-full transition-all ${lang === 'en' ? 'bg-white text-green-700 shadow-md' : 'text-slate-400'}`}>EN</button>
+                <button onClick={() => setLang('bn')} className={`px-5 py-2 text-xs font-bold rounded-full transition-all ${lang === 'bn' ? 'bg-white text-green-700 shadow-md' : 'text-slate-400'}`}>বাংলা</button>
             </div>
           </div>
         </header>
         <main className="pb-24">
           {activeTab === 'overview' && renderOverview()}
           {activeTab === 'news' && renderNewsManager()}
+          {activeTab === 'vision2030' && <div className="p-10 bg-white rounded-3xl">Vision 2030 Content Manager coming soon...</div>}
+          {activeTab === 'youth' && <div className="p-10 bg-white rounded-3xl">Youth Vision Content Manager coming soon...</div>}
           {activeTab === 'manifesto' && renderManifestoManager()}
-          {activeTab === 'bio' && renderBioManager()}
-          {activeTab === 'suggestions' && renderSuggestions()}
-          {activeTab === 'settings' && renderSettings()}
+          {activeTab === 'bio' && renderBioTimeline()}
+          {activeTab === 'support' && renderSupportManager()}
+          {activeTab === 'volunteers' && (
+             <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm overflow-hidden">
+               <div className="overflow-x-auto">
+                 <table className="w-full text-left">
+                   <thead>
+                     <tr className="text-slate-400 text-xs font-black uppercase tracking-widest border-b border-slate-100">
+                       <th className="pb-6 pl-4">Volunteer</th>
+                       <th className="pb-6">Area / Station</th>
+                       <th className="pb-6">Profession</th>
+                       <th className="pb-6">Role</th>
+                       <th className="pb-6 text-right pr-4">Actions</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-slate-50">
+                     {volunteers.map((v: any) => (
+                       <tr key={v.id} className="hover:bg-slate-50/50 transition-colors group">
+                         <td className="py-6 pl-4">
+                           <div className="font-bold text-slate-900">{v.fullName}</div>
+                           <div className="text-xs text-slate-400">{v.phone} • {v.email}</div>
+                         </td>
+                         <td className="py-6">
+                            <div className="text-sm font-medium">{v.thana}, {v.union}</div>
+                            <div className="text-xs text-blue-600 font-bold">{v.pollingStation}</div>
+                         </td>
+                         <td className="py-6 text-sm">
+                            {v.profession}
+                         </td>
+                         <td className="py-6">
+                            <span className="bg-blue-50 text-blue-700 text-[10px] px-2 py-1 rounded-md font-bold border border-blue-100 uppercase">{v.role}</span>
+                         </td>
+                         <td className="py-6 text-right pr-4">
+                            <button onClick={() => {
+                               const updated = volunteers.filter(item => item.id !== v.id);
+                               setVolunteers(updated); handleSave('VOLUNTEERS', updated);
+                            }} className="p-2 text-slate-300 hover:text-red-600 transition-colors"><Trash2 size={18}/></button>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+          )}
+          {activeTab === 'suggestions' && (
+            <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm overflow-hidden">
+               <div className="overflow-x-auto">
+                 <table className="w-full text-left">
+                   <thead>
+                     <tr className="text-slate-400 text-xs font-black uppercase tracking-widest border-b border-slate-100">
+                       <th className="pb-6 pl-4">Voter</th>
+                       <th className="pb-6">Location</th>
+                       <th className="pb-6">Category</th>
+                       <th className="pb-6">Message</th>
+                       <th className="pb-6 text-right pr-4">Actions</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-slate-50">
+                     {suggestions.map((s: any) => (
+                       <tr key={s.id} className="hover:bg-slate-50/50 transition-colors group">
+                         <td className="py-6 pl-4">
+                           <div className="font-bold text-slate-900">{s.fullName}</div>
+                           <div className="text-xs text-slate-400">{s.phone}</div>
+                         </td>
+                         <td className="py-6">
+                            <div className="text-sm font-medium">{s.thana}</div>
+                            <div className="text-xs text-slate-400">{s.union}</div>
+                         </td>
+                         <td className="py-6">
+                            <span className="bg-green-50 text-green-700 text-[10px] px-2 py-1 rounded-md font-bold border border-green-100 uppercase">{s.category}</span>
+                         </td>
+                         <td className="py-6">
+                            <p className="text-xs text-slate-600 line-clamp-2 max-w-xs">{s.suggestion}</p>
+                         </td>
+                         <td className="py-6 text-right pr-4">
+                            <button onClick={() => {
+                               const updated = suggestions.filter(item => item.id !== s.id);
+                               setSuggestions(updated); handleSave('SUGGESTIONS', updated);
+                            }} className="p-2 text-slate-300 hover:text-red-600 transition-colors"><Trash2 size={18}/></button>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+          )}
+          {activeTab === 'settings' && (
+            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
+               <h4 className="text-xl font-bold mb-8">System Admin Accounts</h4>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {admins.map((a, i) => (
+                    <div key={i} className="p-6 bg-slate-50 rounded-2xl flex justify-between items-center">
+                       <div>
+                          <div className="font-black text-slate-900">{a.username}</div>
+                          <div className="text-xs text-slate-400 uppercase tracking-widest">{a.role}</div>
+                       </div>
+                       <div className="flex gap-2">
+                          <div className="text-[10px] bg-slate-200 px-2 py-1 rounded font-bold">Active</div>
+                       </div>
+                    </div>
+                  ))}
+               </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

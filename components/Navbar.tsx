@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { Menu, X, Bot, Globe, MessageSquare } from 'lucide-react';
+import { Menu, X, Bot, Globe, MessageSquare, Rocket, Flag } from 'lucide-react';
 import { TRANSLATIONS, Language } from '../constants';
 import BnpLogo from './BnpLogo';
 
 interface NavbarProps {
-  onNavigate?: (page: 'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'feedback') => void;
+  onNavigate?: (page: 'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'feedback' | 'youth' | 'vision2030') => void;
   lang: Language;
   setLang: (lang: Language) => void;
 }
@@ -16,6 +16,8 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
 
   const navLinks = [
     { name: t.nav.home, href: '#home', value: 'home' as const },
+    { name: t.nav.vision2030, href: '#vision2030', value: 'vision2030' as const },
+    { name: t.nav.youth, href: '#youth', value: 'youth' as const },
     { name: t.nav.vision, href: '#vision', value: 'vision' as const },
     { name: t.nav.biography, href: '#bio', value: 'biography' as const },
     { name: t.nav.updates, href: '#updates', value: 'updates' as const },
@@ -47,7 +49,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
           </div>
 
           {/* Desktop Links */}
-          <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
+          <div className="hidden md:flex items-center space-x-4 lg:space-x-6">
             {navLinks.map((link) => (
               <a
                 key={link.name}
@@ -56,22 +58,31 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
                   e.preventDefault();
                   handleLinkClick(link);
                 }}
-                className={`flex items-center gap-1.5 transition-colors font-medium text-sm lg:text-base ${
+                className={`relative flex items-center gap-1.5 transition-colors font-medium text-xs lg:text-sm ${
                   link.value === 'ai-assistant' 
                     ? 'text-green-700 font-bold bg-green-50 px-3 py-1 rounded-full border border-green-100' 
+                    : link.value === 'youth'
+                    ? 'text-blue-600 font-bold'
+                    : link.value === 'vision2030'
+                    ? 'text-red-600 font-black'
                     : link.value === 'feedback'
                     ? 'text-red-600 font-bold'
                     : 'text-slate-600 hover:text-green-700'
                 }`}
               >
                 {link.value === 'ai-assistant' && <Bot size={16} />}
+                {link.value === 'youth' && <Rocket size={16} />}
+                {link.value === 'vision2030' && <Flag size={16} />}
                 {link.value === 'feedback' && <MessageSquare size={16} />}
                 {link.name}
+                {link.value === 'youth' && (
+                  <span className="absolute -top-3 -right-3 bg-red-600 text-white text-[8px] px-1 rounded-sm font-black animate-pulse">NEW</span>
+                )}
               </a>
             ))}
             
             {/* Language Toggle */}
-            <div className="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
+            <div className="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200 ml-2">
               <button 
                 onClick={() => setLang('en')}
                 className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${lang === 'en' ? 'bg-white text-green-700 shadow-sm' : 'text-slate-500'}`}
@@ -88,7 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
 
             <button 
               onClick={() => onNavigate?.('support-us')}
-              className="bg-red-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-red-700 transition-all shadow-md"
+              className="bg-red-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-red-700 transition-all shadow-md text-sm whitespace-nowrap"
             >
               {t.nav.support}
             </button>
@@ -108,7 +119,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-white border-b border-slate-200">
+        <div className="md:hidden bg-white border-b border-slate-200 max-h-[90vh] overflow-y-auto">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navLinks.map((link) => (
               <a
@@ -118,9 +129,20 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
                   e.preventDefault();
                   handleLinkClick(link);
                 }}
-                className="block px-3 py-2 text-base font-medium text-slate-600 hover:text-green-700 hover:bg-slate-50 rounded-md"
+                className={`block px-3 py-2 text-base font-medium rounded-md ${
+                  link.value === 'youth' ? 'text-blue-600 bg-blue-50' : 
+                  link.value === 'vision2030' ? 'text-red-600 bg-red-50' :
+                  'text-slate-600 hover:text-green-700 hover:bg-slate-50'
+                }`}
               >
-                {link.name}
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-2">
+                     {link.value === 'youth' && <Rocket size={18}/>}
+                     {link.value === 'vision2030' && <Flag size={18}/>}
+                     {link.name}
+                   </div>
+                   {link.value === 'youth' && <span className="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">NEW</span>}
+                </div>
               </a>
             ))}
             <button onClick={() => onNavigate?.('support-us')} className="w-full mt-2 bg-red-600 text-white px-5 py-3 rounded-md font-semibold text-center">

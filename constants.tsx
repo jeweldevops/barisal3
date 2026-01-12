@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Gavel, Landmark, Heart, BookOpen, GraduationCap, Building2, Scale, Droplets, Tractor, HeartPulse, Laptop } from 'lucide-react';
+import { Gavel, Landmark, Heart, BookOpen, GraduationCap, Building2, Scale, Droplets, Tractor, HeartPulse, Laptop, Zap, Trophy, Rocket, Cpu, Flag, ShieldCheck, Globe, Handshake } from 'lucide-react';
 
 export const CANDIDATE_NAME = "Advocate Zainul Abedin";
 export const CANDIDATE_NAME_BN = "এ্যাডভোকেট জয়নুল আবেদীন";
@@ -33,7 +33,36 @@ export const TRANSLATIONS = {
       ai: "AI Assistant",
       support: "Support Us",
       feedback: "Your Opinion",
+      youth: "Youth Vision",
+      vision2030: "Vision 2030",
       back: "Back to Home"
+    },
+    vision2030: {
+      title: "Vision 2030",
+      title_bn: "ভিশন ২০৩০",
+      subtitle: "A national roadmap for a democratic, self-reliant, and modern Bangladesh.",
+      intro: "Vision 2030 is our pledge to transform Bangladesh into a high-income, modern, and democratic state by the year 2030.",
+      pillar1: "Democratic Restoration",
+      pillar1_desc: "Restoring the rule of law, ensuring independence of the judiciary, and protecting freedom of speech.",
+      pillar2: "Economic Growth",
+      pillar2_desc: "Building a middle-income country through industrialization, infrastructure, and entrepreneurship.",
+      pillar3: "Social Justice",
+      pillar3_desc: "Eliminating poverty and ensuring equal rights for all citizens regardless of their background.",
+      pillar4: "Foreign Policy",
+      pillar4_desc: "Friendship to all, malice to none—protecting national interests on the global stage."
+    },
+    youth: {
+      title: "The Bangladesh of Future in Youth's Thoughts",
+      title_bn: "তারুণ্যের ভাবনায় আগামীর বাংলাদেশ",
+      subtitle: "Empowering the next generation of Babuganj & Muladi through Technology, Innovation, and Leadership.",
+      card1_title: "Freelancing & Gig Economy",
+      card1_desc: "Establishing specialized IT hubs and high-speed internet zones in every union to create global employment opportunities.",
+      card2_title: "Modern Sports Infrastructure",
+      card2_desc: "Modernizing local stadiums and creating talent hunt programs for the youth of Barisal-3.",
+      card3_title: "Entrepreneurship Fund",
+      card3_desc: "Providing interest-free start-up capital for young entrepreneurs to build local industries.",
+      card4_title: "Digital Education",
+      card4_desc: "Introducing smart classrooms and coding bootcamps in all local high schools and colleges."
     },
     hero: {
       nominee: "General Election 2026 Candidate",
@@ -140,10 +169,16 @@ export const TRANSLATIONS = {
       form_title: "Join the Campaign Team",
       form_thanks: "Thank You!",
       form_success: "Your application has been received.",
-      form_name: "Full Name",
-      form_email: "Email Address",
-      form_area: "Preferred Area",
-      form_role: "How would you like to help?",
+      form_name: "Full Name *",
+      form_gender: "Gender *",
+      form_profession: "Profession *",
+      form_phone: "Mobile Number *",
+      form_email: "Email Address *",
+      form_thana: "Upazila / Thana *",
+      form_union: "Union *",
+      form_village: "Village *",
+      form_polling: "Polling Station *",
+      form_role: "Campaign Role / How would you like to help? *",
       form_submit: "Register as Volunteer",
       financial_title: "Financial Contributions",
       financial_desc: "Your donations help us reach every household in the constituency.",
@@ -199,7 +234,36 @@ export const TRANSLATIONS = {
       ai: "এআই অ্যাসিস্ট্যান্ট",
       support: "সহযোগিতা করুন",
       feedback: "আপনার মতামত",
+      youth: "তারুণ্যের ভাবনা",
+      vision2030: "ভিশন ২০৩০",
       back: "মূল পাতায় ফিরুন"
+    },
+    vision2030: {
+      title: "ভিশন ২০৩০",
+      title_bn: "ভিশন ২০৩০",
+      subtitle: "একটি গণতান্ত্রিক, স্বনির্ভর এবং আধুনিক বাংলাদেশের জন্য জাতীয় রূপরেখা।",
+      intro: "ভিশন ২০৩০ হলো ২০৩০ সালের মধ্যে বাংলাদেশকে একটি উচ্চ-আয়ের, আধুনিক এবং গণতান্ত্রিক রাষ্ট্রে পরিণত করার আমাদের অঙ্গীকার।",
+      pillar1: "গণতন্ত্র পুনরুদ্ধার",
+      pillar1_desc: "আইনের শাসন পুনঃপ্রতিষ্ঠা, বিচার বিভাগের স্বাধীনতা নিশ্চিত করা এবং মত প্রকাশের স্বাধীনতা রক্ষা।",
+      pillar2: "অর্থনৈতিক প্রবৃদ্ধি",
+      pillar2_desc: "শিল্পায়ন, অবকাঠামো এবং উদ্যোক্তা তৈরির মাধ্যমে একটি মধ্যম আয়ের দেশ গঠন।",
+      pillar3: "সামাজিক ন্যায়বিচার",
+      pillar3_desc: "দারিদ্র্য বিমোচন এবং সকল নাগরিকের জন্য সমান অধিকার নিশ্চিত করা।",
+      pillar4: "পররাষ্ট্র নীতি",
+      pillar4_desc: "সকলের সাথে বন্ধুত্ব, কারো সাথে বৈরিতা নয়—বিশ্ব মঞ্চে জাতীয় স্বার্থ রক্ষা।"
+    },
+    youth: {
+      title: "তারুণ্যের ভাবনায় আগামীর বাংলাদেশ",
+      title_bn: "তারুণ্যের ভাবনায় আগামীর বাংলাদেশ",
+      subtitle: "প্রযুক্তি, উদ্ভাবন এবং নেতৃত্বের মাধ্যমে বাবুগঞ্জ ও মুলাদীর আগামী প্রজন্মকে ক্ষমতায়ন করা।",
+      card1_title: "ফ্রিল্যান্সিং ও গিগ ইকোনমি",
+      card1_desc: "বিশ্বজুড়ে কর্মসংস্থানের সুযোগ তৈরির জন্য প্রতিটি ইউনিয়নে বিশেষায়িত আইটি হাব এবং উচ্চগতির ইন্টারনেট জোন স্থাপন।",
+      card2_title: "আধুনিক ক্রীড়া অবকাঠামো",
+      card2_desc: "বরিশাল-৩ এর তরুণদের জন্য স্থানীয় স্টেডিয়ামগুলোর আধুনিকায়ন এবং প্রতিভা অনেষণ কর্মসূচি তৈরি।",
+      card3_title: "উদ্যোক্তা তহবিল",
+      card3_desc: "তরুণ উদ্যোক্তাদের স্থানীয় শিল্প গড়ে তোলার জন্য সুদমুক্ত স্টার্ট-আপ পুঁজি প্রদান।",
+      card4_title: "ডিজিটাল শিক্ষা",
+      card4_desc: "সব স্থানীয় হাই স্কুল ও কলেজে স্মার্ট ক্লাসরুম এবং কোডিং বুটক্যাম্প চালু করা।"
     },
     hero: {
       nominee: "জাতীয় নির্বাচন ২০২৬ প্রার্থী",
@@ -306,10 +370,16 @@ export const TRANSLATIONS = {
       form_title: "ক্যাম্পেইন টিমে যোগ দিন",
       form_thanks: "ধন্যবাদ!",
       form_success: "আপনার আবেদন গ্রহণ করা হয়েছে।",
-      form_name: "পূর্ণ নাম",
-      form_email: "ইমেইল ঠিকানা",
-      form_area: "পছন্দসই এলাকা",
-      form_role: "আপনি কীভাবে সাহায্য করতে চান?",
+      form_name: "পুরো নাম *",
+      form_gender: "লিঙ্গ *",
+      form_profession: "পেশা *",
+      form_phone: "মোবাইল নম্বর *",
+      form_email: "ইমেইল *",
+      form_thana: "উপজেলা/ Thana *",
+      form_union: "ইউনিয়ন/ Union *",
+      form_village: "গ্রাম/Village *",
+      form_polling: "ভোটকেন্দ্র *",
+      form_role: "ভুমিকা/Role *",
       form_submit: "স্বেচ্ছাসেবক হিসেবে নিবন্ধন করুন",
       financial_title: "আর্থিক অবদান",
       financial_desc: "আপনার অনুদান আমাদের প্রতিটি পরিবারে পৌঁছাতে সাহায্য করে।",

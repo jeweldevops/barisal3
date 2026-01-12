@@ -2,29 +2,25 @@
 import React, { useEffect, useState } from 'react';
 import { Language, TRANSLATIONS, CANDIDATE_IMAGE } from '../constants';
 import { getData, saveData } from '../services/storageService';
-import { ArrowLeft, Award, BookOpen, Gavel, History, Scale, Users, Heart, Star, Briefcase, Quote, Facebook, Twitter, MessageCircle, Share2, Landmark, Building2, Upload, Camera } from 'lucide-react';
+import { ArrowLeft, Award, BookOpen, Gavel, History, Scale, Users, Heart, Star, Briefcase, Quote, Facebook, Twitter, MessageCircle, Share2, Landmark, Building2, Upload, Camera, CheckCircle2, X } from 'lucide-react';
 
 interface BiographyPageProps {
   onBack: () => void;
   lang: Language;
   currentAdmin?: any;
+  profile: any;
+  onProfileUpdate: (newProfile: any) => void;
 }
 
-const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmin }) => {
+const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmin, profile, onProfileUpdate }) => {
   const t = TRANSLATIONS[lang];
   const [milestones, setMilestones] = useState<any[]>([]);
-  const [profile, setProfile] = useState<any>(getData('PROFILE'));
-  const [portrait, setPortrait] = useState<string>(profile?.image || CANDIDATE_IMAGE);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   useEffect(() => {
     const data = getData('BIO');
     if (data) {
       setMilestones(data[lang]);
-    }
-    const freshProfile = getData('PROFILE');
-    if (freshProfile) {
-      setProfile(freshProfile);
-      setPortrait(freshProfile.image || CANDIDATE_IMAGE);
     }
   }, [lang]);
 
@@ -38,10 +34,17 @@ const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmi
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64 = event.target?.result as string;
-        setPortrait(base64);
         const updatedProfile = { ...profile, image: base64 };
-        setProfile(updatedProfile);
+        
+        // Save to persistent storage
         saveData('PROFILE', updatedProfile);
+        
+        // Update global application state
+        onProfileUpdate(updatedProfile);
+        
+        // Show success feedback
+        setUploadSuccess(true);
+        setTimeout(() => setUploadSuccess(false), 5000);
       };
       reader.readAsDataURL(file);
     }
@@ -75,6 +78,21 @@ const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmi
 
   return (
     <div className="min-h-screen bg-white pt-20">
+      {/* Success Notification */}
+      {uploadSuccess && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] animate-fade-in-down">
+          <div className="bg-green-700 text-white px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-3 border border-green-600 ring-4 ring-green-100">
+            <CheckCircle2 size={24} />
+            <span className="font-bold">
+              {lang === 'en' ? 'Portrait updated successfully!' : 'অফিসিয়াল ছবি সফলভাবে আপডেট করা হয়েছে!'}
+            </span>
+            <button onClick={() => setUploadSuccess(false)} className="ml-2 hover:bg-white/10 p-1 rounded-full">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="relative bg-slate-50 py-16 md:py-24 overflow-hidden">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl"></div>
@@ -93,7 +111,7 @@ const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmi
               <div className="relative w-full max-w-sm md:max-w-md mx-auto lg:mx-0">
                 <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] border-[12px] md:border-[16px] border-white bg-white ring-1 ring-slate-100 relative group transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)]">
                   <img 
-                    src={portrait} 
+                    src={profile.image || CANDIDATE_IMAGE} 
                     alt={lang === 'en' ? profile.name_en : profile.name_bn}
                     className="w-full h-full object-cover object-center scale-[1.02] transition-transform duration-700 group-hover:scale-105"
                   />
@@ -102,7 +120,7 @@ const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmi
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                       <div className="bg-white p-4 rounded-2xl shadow-xl flex items-center gap-3 transform -translate-y-4 group-hover:translate-y-0 transition-transform">
                         <Camera className="text-green-700" size={24} />
-                        <span className="font-bold text-slate-900">{lang === 'en' ? 'Upload New Portrait' : 'নতুন ছবি আপলোড'}</span>
+                        <span className="font-bold text-slate-900">{lang === 'en' ? 'Update Official Photo' : 'অফিসিয়াল ছবি পরিবর্তন'}</span>
                       </div>
                       <input 
                         type="file" 
@@ -234,6 +252,16 @@ const BiographyPage: React.FC<BiographyPageProps> = ({ onBack, lang, currentAdmi
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fade-in-down {
+          from { opacity: 0; transform: translate(-50%, -20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .animate-fade-in-down {
+          animation: fade-in-down 0.4s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };

@@ -14,8 +14,7 @@ import Vision2030Page from './components/Vision2030Page';
 import AdminDashboard from './components/AdminDashboard';
 import BnpLogo from './components/BnpLogo';
 import { initStorage, getData } from './services/storageService';
-import { TRANSLATIONS, Language, CANDIDATE_IMAGE, CANDIDATE_NAME, CANDIDATE_NAME_BN, PARTY, PARTY_BN, CONTACT_PHONE, CONTACT_EMAIL, OFFICE_ADDRESS_EN, OFFICE_ADDRESS_BN } from './constants';
-// Added missing icons: Flag, Laptop, Trophy, Cpu
+import { TRANSLATIONS, Language, CANDIDATE_IMAGE, CANDIDATE_NAME, CANDIDATE_NAME_BN, PARTY, PARTY_BN, CONTACT_PHONE, CONTACT_EMAIL, OFFICE_ADDRESS_EN, OFFICE_ADDRESS_BN, OFFICIAL_DOMAIN } from './constants';
 import { Calendar, ChevronRight, Mail, Phone, MapPin, Facebook, Twitter, Youtube, Instagram, ArrowRight, Sparkles, Bot, Lock, Music, X, User, Building2, Camera, MessageCircle, Lightbulb, Rocket, Zap, Laptop, Trophy, Cpu, Flag } from 'lucide-react';
 
 const SESSION_KEY = 'zainul_admin_session';
@@ -118,9 +117,12 @@ const App: React.FC = () => {
                 {lang === 'en' ? profile.name_en : profile.name_bn} <span className="text-green-500">{lang === 'en' ? 'Barisal-3' : 'বরিশাল-৩'}</span>
               </div>
             </div>
-            <p className="text-slate-400 max-w-md mb-8 leading-relaxed">
+            <p className="text-slate-400 max-w-md mb-4 leading-relaxed">
               {lang === 'en' ? profile.party_en + ' Nominated MP candidate' : profile.party_bn + ' মনোনীত সংসদ সদস্য প্রার্থী'}
             </p>
+            <a href={`https://${OFFICIAL_DOMAIN}`} target="_blank" rel="noopener noreferrer" className="text-red-500 font-bold hover:underline mb-8 block">
+              www.{OFFICIAL_DOMAIN}
+            </a>
             
             <div className="space-y-4">
               <h5 className="text-xs uppercase font-black tracking-[0.2em] text-slate-500">

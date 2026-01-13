@@ -66,12 +66,24 @@ export const initStorage = () => {
       ]
     }));
   }
-  if (!localStorage.getItem(KEYS.ADMINS)) {
-    localStorage.setItem(KEYS.ADMINS, JSON.stringify([
-      { username: 'admin', password: 'Bangla@1216', role: 'Super Admin' },
-      { username: 'jewel', password: 'Dhaka@1216', role: 'Admin' }
-    ]));
+  
+  // Re-initialize or update admins to match user request
+  const defaultAdmins = [
+    { username: 'admin', password: 'Bangla@1216', role: 'Super Admin' },
+    { username: 'jewel', password: 'Dhaka@1216', role: 'Admin' }
+  ];
+  const storedAdmins = localStorage.getItem(KEYS.ADMINS);
+  if (!storedAdmins) {
+    localStorage.setItem(KEYS.ADMINS, JSON.stringify(defaultAdmins));
+  } else {
+    // Force update the 'admin' user password if requested
+    const currentAdmins = JSON.parse(storedAdmins);
+    const updatedAdmins = currentAdmins.map((a: any) => 
+      a.username === 'admin' ? { ...a, password: 'Bangla@1216' } : a
+    );
+    localStorage.setItem(KEYS.ADMINS, JSON.stringify(updatedAdmins));
   }
+
   if (!localStorage.getItem(KEYS.SUGGESTIONS)) {
     localStorage.setItem(KEYS.SUGGESTIONS, JSON.stringify([]));
   }

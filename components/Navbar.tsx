@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { Menu, X, Bot, Globe, MessageSquare, Rocket, Flag } from 'lucide-react';
+import { Menu, X, Bot, Globe, MessageSquare, Rocket, Flag, HeartHandshake } from 'lucide-react';
 import { TRANSLATIONS, Language } from '../constants';
 import BnpLogo from './BnpLogo';
 
 interface NavbarProps {
-  onNavigate?: (page: 'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'feedback' | 'youth' | 'vision2030') => void;
+  onNavigate?: (page: 'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'feedback' | 'youth' | 'women' | 'vision2030') => void;
   lang: Language;
   setLang: (lang: Language) => void;
 }
@@ -18,6 +18,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
     { name: t.nav.home, href: '#home', value: 'home' as const },
     { name: t.nav.vision2030, href: '#vision2030', value: 'vision2030' as const },
     { name: t.nav.youth, href: '#youth', value: 'youth' as const },
+    { name: t.nav.women, href: '#women', value: 'women' as const },
     { name: t.nav.vision, href: '#vision', value: 'vision' as const },
     { name: t.nav.biography, href: '#bio', value: 'biography' as const },
     { name: t.nav.updates, href: '#updates', value: 'updates' as const },
@@ -63,6 +64,8 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
                     ? 'text-green-700 font-bold bg-green-50 px-3 py-1 rounded-full border border-green-100' 
                     : link.value === 'youth'
                     ? 'text-blue-600 font-bold'
+                    : link.value === 'women'
+                    ? 'text-purple-600 font-bold'
                     : link.value === 'vision2030'
                     ? 'text-red-600 font-black'
                     : link.value === 'feedback'
@@ -72,12 +75,10 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
               >
                 {link.value === 'ai-assistant' && <Bot size={16} />}
                 {link.value === 'youth' && <Rocket size={16} />}
+                {link.value === 'women' && <HeartHandshake size={16} />}
                 {link.value === 'vision2030' && <Flag size={16} />}
                 {link.value === 'feedback' && <MessageSquare size={16} />}
                 {link.name}
-                {link.value === 'youth' && (
-                  <span className="absolute -top-3 -right-3 bg-red-600 text-white text-[8px] px-1 rounded-sm font-black animate-pulse">NEW</span>
-                )}
               </a>
             ))}
             
@@ -131,6 +132,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
                 }}
                 className={`block px-3 py-2 text-base font-medium rounded-md ${
                   link.value === 'youth' ? 'text-blue-600 bg-blue-50' : 
+                  link.value === 'women' ? 'text-purple-600 bg-purple-50' :
                   link.value === 'vision2030' ? 'text-red-600 bg-red-50' :
                   'text-slate-600 hover:text-green-700 hover:bg-slate-50'
                 }`}
@@ -138,10 +140,10 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, lang, setLang }) => {
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-2">
                      {link.value === 'youth' && <Rocket size={18}/>}
+                     {link.value === 'women' && <HeartHandshake size={18}/>}
                      {link.value === 'vision2030' && <Flag size={18}/>}
                      {link.name}
                    </div>
-                   {link.value === 'youth' && <span className="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">NEW</span>}
                 </div>
               </a>
             ))}

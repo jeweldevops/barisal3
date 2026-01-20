@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -10,17 +9,19 @@ import AIAssistantPage from './components/AIAssistantPage';
 import SupportUsPage from './components/SupportUsPage';
 import FeedbackPage from './components/FeedbackPage';
 import YouthVisionPage from './components/YouthVisionPage';
+import WomenDevelopmentPage from './components/WomenDevelopmentPage';
 import Vision2030Page from './components/Vision2030Page';
 import AdminDashboard from './components/AdminDashboard';
 import BnpLogo from './components/BnpLogo';
 import { initStorage, getData } from './services/storageService';
 import { TRANSLATIONS, Language, CANDIDATE_IMAGE, CANDIDATE_NAME, CANDIDATE_NAME_BN, PARTY, PARTY_BN, CONTACT_PHONE, CONTACT_EMAIL, OFFICE_ADDRESS_EN, OFFICE_ADDRESS_BN, OFFICIAL_DOMAIN } from './constants';
-import { Calendar, ChevronRight, Mail, Phone, MapPin, Facebook, Twitter, Youtube, Instagram, ArrowRight, Sparkles, Bot, Lock, Music, X, User, Building2, Camera, MessageCircle, Lightbulb, Rocket, Zap, Laptop, Trophy, Cpu, Flag } from 'lucide-react';
+// Added missing icons: Heart, GraduationCap, Shield to match the components used in the JSX.
+import { Calendar, ChevronRight, Mail, Phone, MapPin, Facebook, Twitter, Youtube, Instagram, ArrowRight, Sparkles, Bot, Lock, Music, X, User, Building2, Camera, MessageCircle, Lightbulb, Rocket, Zap, Laptop, Trophy, Cpu, Flag, HeartHandshake, Heart, GraduationCap, Shield } from 'lucide-react';
 
 const SESSION_KEY = 'zainul_admin_session';
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'feedback' | 'youth' | 'vision2030' | 'admin'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'vision' | 'biography' | 'updates' | 'ai-assistant' | 'support-us' | 'feedback' | 'youth' | 'women' | 'vision2030' | 'admin'>('home');
   const [lang, setLang] = useState<Language>('en');
   const [currentAdmin, setCurrentAdmin] = useState<any>(null);
   const [showLogin, setShowLogin] = useState(false);
@@ -144,6 +145,7 @@ const App: React.FC = () => {
               <li><button onClick={() => setCurrentPage('home')} className="hover:text-red-400 transition-colors">{t.nav.home}</button></li>
               <li><button onClick={() => setCurrentPage('vision2030')} className="hover:text-red-400 transition-colors">{t.nav.vision2030}</button></li>
               <li><button onClick={() => setCurrentPage('youth')} className="hover:text-blue-400 transition-colors">{t.nav.youth}</button></li>
+              <li><button onClick={() => setCurrentPage('women')} className="hover:text-purple-400 transition-colors">{t.nav.women}</button></li>
               <li><button onClick={() => setCurrentPage('vision')} className="hover:text-red-400 transition-colors">{t.nav.vision}</button></li>
               <li><button onClick={() => setCurrentPage('biography')} className="hover:text-red-400 transition-colors">{t.nav.biography}</button></li>
               <li><button onClick={() => setCurrentPage('updates')} className="hover:text-red-400 transition-colors">{t.nav.updates}</button></li>
@@ -242,6 +244,8 @@ const App: React.FC = () => {
         <FeedbackPage onBack={() => setCurrentPage('home')} lang={lang} />
       ) : currentPage === 'youth' ? (
         <YouthVisionPage onBack={() => setCurrentPage('home')} onFeedback={() => setCurrentPage('feedback')} lang={lang} />
+      ) : currentPage === 'women' ? (
+        <WomenDevelopmentPage onBack={() => setCurrentPage('home')} onFeedback={() => setCurrentPage('feedback')} lang={lang} />
       ) : currentPage === 'vision2030' ? (
         <Vision2030Page onBack={() => setCurrentPage('home')} lang={lang} />
       ) : (
@@ -269,6 +273,38 @@ const App: React.FC = () => {
                         <Flag size={150} className="text-white opacity-20" />
                         <div className="absolute inset-0 flex items-center justify-center">
                            <span className="text-8xl font-black text-white/40 tracking-tighter">2030</span>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </section>
+
+          {/* Women Development Call-to-Action */}
+          <section className="py-24 bg-white relative overflow-hidden">
+             <div className="absolute bottom-0 left-0 w-full h-1/2 bg-purple-50 -z-10 skew-y-3 translate-y-1/2"></div>
+             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="bg-slate-900 rounded-[3rem] p-8 md:p-16 text-white flex flex-col lg:flex-row-reverse items-center gap-12 shadow-2xl overflow-hidden relative group">
+                   <div className="absolute inset-0 bg-gradient-to-l from-purple-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                   <div className="flex-1 relative z-10 text-center lg:text-left">
+                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-700/30 border border-purple-500/30 text-purple-400 text-xs font-black mb-6 uppercase tracking-widest">
+                        <HeartHandshake size={14}/> {lang === 'en' ? 'Women Empowerment' : 'নারী ক্ষমতায়ন'}
+                      </div>
+                      <h3 className="text-4xl md:text-6xl font-black mb-6 font-serif italic">{t.women.title_bn}</h3>
+                      <p className="text-xl text-slate-400 mb-8 max-w-xl">{t.women.subtitle}</p>
+                      <button onClick={() => setCurrentPage('women')} className="bg-white text-slate-900 px-10 py-5 rounded-2xl font-black text-xl hover:bg-purple-50 transition-all flex items-center gap-3 mx-auto lg:mx-0">
+                        {lang === 'en' ? 'Explore Women\'s Vision' : 'নারীদের ভিশন দেখুন'} <ArrowRight size={24} />
+                      </button>
+                   </div>
+                   <div className="flex-1 relative z-10 hidden lg:block">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-4 pt-12">
+                           <div className="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center animate-pulse"><Heart size={48} className="text-pink-500"/></div>
+                           <div className="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center" style={{animationDelay: '0.2s'}}><Building2 size={48} className="text-indigo-400"/></div>
+                        </div>
+                        <div className="space-y-4">
+                           <div className="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center" style={{animationDelay: '0.4s'}}><GraduationCap size={48} className="text-purple-400"/></div>
+                           <div className="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center animate-pulse" style={{animationDelay: '0.6s'}}><Shield size={48} className="text-rose-500"/></div>
                         </div>
                       </div>
                    </div>

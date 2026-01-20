@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Gavel, Landmark, Heart, BookOpen, GraduationCap, Building2, Scale, Droplets, Tractor, HeartPulse, Laptop, Zap, Trophy, Rocket, Cpu, Flag, ShieldCheck, Globe, Handshake } from 'lucide-react';
+import { Gavel, Landmark, Heart, BookOpen, GraduationCap, Building2, Scale, Droplets, Tractor, HeartPulse, Laptop, Zap, Trophy, Rocket, Cpu, Flag, ShieldCheck, Globe, Handshake, Users, HeartHandshake, Shield, Sparkles, CreditCard } from 'lucide-react';
 
 export const CANDIDATE_NAME = "Advocate Zainul Abedin";
 export const CANDIDATE_NAME_BN = "এ্যাডভোকেট জয়নুল আবেদীন";
@@ -35,8 +35,25 @@ export const TRANSLATIONS = {
       support: "Support Us",
       feedback: "Your Opinion",
       youth: "Youth Vision",
+      women: "Women's Vision",
       vision2030: "Vision 2030",
       back: "Back to Home"
+    },
+    women: {
+      title: "Women's Empowerment & Rights",
+      title_bn: "নারী ক্ষমতায়ন ও অধিকার",
+      subtitle: "Building a safe, dignified, and inclusive future for the women of Babuganj & Muladi.",
+      pillar1_title: "Safe & Justice-Oriented Barisal-3",
+      pillar1_desc: "Establishing 24/7 dedicated help desks and free legal aid centers specifically for women's safety and protection.",
+      pillar2_title: "Economic Self-Reliance",
+      pillar2_desc: "Providing interest-free start-up capital and specialized market access for women entrepreneurs and small cottage industries.",
+      pillar3_title: "Health & Maternity Care",
+      pillar3_desc: "Modernizing every Union Health Complex with dedicated Mother and Child wings and free prenatal counseling.",
+      pillar4_title: "Digital & Technical Skill",
+      pillar4_desc: "Creating female-only IT training centers to bridge the digital gap and open doors to global freelancing.",
+      pillar5_title: "BNP Declared Family Card",
+      pillar5_desc: "Ensuring monthly subsistence allowance and essential commodity subsidies for low-income women through the party-declared Family Card system.",
+      quote: '"A nation can only progress when its women are safe, educated, and economically independent."'
     },
     vision2030: {
       title: "Vision 2030",
@@ -236,8 +253,25 @@ export const TRANSLATIONS = {
       support: "সহযোগিতা করুন",
       feedback: "আপনার মতামত",
       youth: "তারুণ্যের ভাবনা",
+      women: "নারীদের ভিশন",
       vision2030: "ভিশন ২০৩০",
       back: "মূল পাতায় ফিরুন"
+    },
+    women: {
+      title: "নারী ক্ষমতায়ন ও অধিকার",
+      title_bn: "নারীদের ভিশন",
+      subtitle: "বাবুগঞ্জ ও মুলাদীর নারীদের জন্য একটি নিরাপদ, মর্যাদাশীল এবং অন্তর্ভুক্তিমূলক ভবিষ্যৎ গড়ে তোলা।",
+      pillar1_title: "নিরাপদ ও ন্যায়বিচার-মুখী বরিশাল-৩",
+      pillar1_desc: "নারীদের নিরাপত্তা ও সুরক্ষার জন্য ২৪/৭ ডেডিকেটেড হেল্প ডেস্ক এবং বিশেষায়িত ফ্রি আইনি সহায়তা কেন্দ্র স্থাপন।",
+      pillar2_title: "অর্থনৈতিক স্বনির্ভরতা",
+      pillar2_desc: "নারী উদ্যোক্তা এবং ক্ষুদ্র কুটির শিল্পের জন্য সুদমুক্ত স্টার্ট-আপ পুঁজি এবং বিশেষ বাজার সুবিধা প্রদান।",
+      pillar3_title: "স্বাস্থ্য ও মাতৃত্বকালীন সেবা",
+      pillar3_desc: "প্রতিটি ইউনিয়ন স্বাস্থ্য কমপ্লেক্সে মা ও শিশু ইউনিট এবং বিনামূল্যে প্রসবপূর্ব পরামর্শ প্রদানের জন্য আধুনিকায়ন।",
+      pillar4_title: "ডিজিটাল ও কারিগরি দক্ষতা",
+      pillar4_desc: "ডিজিটাল ব্যবধান কমাতে এবং বিশ্বজুড়ে ফ্রিল্যান্সিংয়ের সুযোগ তৈরি করতে শুধুমাত্র নারীদের জন্য আইটি ট্রেনিং সেন্টার গড়ে তোলা।",
+      pillar5_title: "বিএনপি ঘোষিত ফ্যামিলি কার্ড",
+      pillar5_desc: "অল্প আয়ের পরিবারের নারীদের জন্য মাসিক জীবনধারণ ভাতা এবং প্রয়োজনীয় পণ্য ভর্তুকি নিশ্চিত করতে বিএনপি ঘোষিত 'ফ্যামিলি কার্ড' সুবিধা প্রদান।",
+      quote: '"একটি জাতি তখনই উন্নতি করতে পারে যখন তার নারীরা নিরাপদ, শিক্ষিত এবং অর্থনৈতিকভাবে স্বাধীন থাকে।"'
     },
     vision2030: {
       title: "ভিশন ২০৩০",

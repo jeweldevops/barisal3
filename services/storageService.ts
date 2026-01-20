@@ -11,6 +11,7 @@ const KEYS = {
   VOLUNTEERS: 'zainul_campaign_volunteers',
   VISION2030: 'zainul_campaign_vision2030',
   YOUTH: 'zainul_campaign_youth',
+  WOMEN: 'zainul_campaign_women',
   SUPPORT_CONFIG: 'zainul_campaign_support_config'
 };
 
@@ -132,6 +133,30 @@ export const initStorage = () => {
           { title: TRANSLATIONS.bn.youth.card2_title, desc: TRANSLATIONS.bn.youth.card2_desc },
           { title: TRANSLATIONS.bn.youth.card3_title, desc: TRANSLATIONS.bn.youth.card3_desc },
           { title: TRANSLATIONS.bn.youth.card4_title, desc: TRANSLATIONS.bn.youth.card4_desc },
+        ]
+      }
+    }));
+  }
+  if (!localStorage.getItem(KEYS.WOMEN)) {
+    localStorage.setItem(KEYS.WOMEN, JSON.stringify({
+      en: {
+        subtitle: TRANSLATIONS.en.women.subtitle,
+        pillars: [
+          { title: TRANSLATIONS.en.women.pillar1_title, desc: TRANSLATIONS.en.women.pillar1_desc },
+          { title: TRANSLATIONS.en.women.pillar2_title, desc: TRANSLATIONS.en.women.pillar2_desc },
+          { title: TRANSLATIONS.en.women.pillar3_title, desc: TRANSLATIONS.en.women.pillar3_desc },
+          { title: TRANSLATIONS.en.women.pillar4_title, desc: TRANSLATIONS.en.women.pillar4_desc },
+          { title: TRANSLATIONS.en.women.pillar5_title, desc: TRANSLATIONS.en.women.pillar5_desc },
+        ]
+      },
+      bn: {
+        subtitle: TRANSLATIONS.bn.women.subtitle,
+        pillars: [
+          { title: TRANSLATIONS.bn.women.pillar1_title, desc: TRANSLATIONS.bn.women.pillar1_desc },
+          { title: TRANSLATIONS.bn.women.pillar2_title, desc: TRANSLATIONS.bn.women.pillar2_desc },
+          { title: TRANSLATIONS.bn.women.pillar3_title, desc: TRANSLATIONS.bn.women.pillar3_desc },
+          { title: TRANSLATIONS.bn.women.pillar4_title, desc: TRANSLATIONS.bn.women.pillar4_desc },
+          { title: TRANSLATIONS.bn.women.pillar5_title, desc: TRANSLATIONS.bn.women.pillar5_desc },
         ]
       }
     }));
